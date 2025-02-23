@@ -8,6 +8,7 @@ UIDENT=7
 LIDENT=8
 DECIMAL=9
 STRING=10
+CHAR=11
 'var'=1
 ','=2
 ';'=3

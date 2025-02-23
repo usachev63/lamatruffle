@@ -93,4 +93,27 @@ public class LamaNodeFactory {
         assert rawText.length() >= 2;
         return rawText.substring(1, rawText.length() - 1).replaceAll("\"\"", "\"");
     }
+
+    public Const createCharLiteral(Token literalToken) {
+        String tokenText = literalToken.getText();
+        assert tokenText.length() >= 3;
+        assert tokenText.charAt(0) == '\'';
+        assert tokenText.charAt(literalToken.getText().length() - 1) == '\'';
+        String innerText = tokenText.substring(1, tokenText.length() - 1);
+        switch (innerText) {
+            case "''" -> {
+                return new Const((int) '\'');
+            }
+            case "\\n" -> {
+                return new Const((int) '\n');
+            }
+            case "\\t" -> {
+                return new Const((int) '\t');
+            }
+            default -> {
+                assert innerText.length() == 1;
+                return new Const((int)innerText.charAt(0));
+            }
+        }
+    }
 }
