@@ -38,7 +38,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package com.oracle.truffle.sl.launcher;
+package ru.usachev63.lamatruffle.launcher;
 
 import java.io.File;
 import java.io.IOException;
@@ -53,9 +53,9 @@ import org.graalvm.polyglot.PolyglotException;
 import org.graalvm.polyglot.Source;
 import org.graalvm.polyglot.Value;
 
-public final class SLMain {
+public final class LamaMain {
 
-    private static final String SL = "sl";
+    private static final String LAMA = "lama";
 
     /**
      * The main entry point.
@@ -79,10 +79,10 @@ public final class SLMain {
 
         if (file == null) {
             // @formatter:off
-            source = Source.newBuilder(SL, new InputStreamReader(System.in), "<stdin>").interactive(!launcherOutput).build();
+            source = Source.newBuilder(LAMA, new InputStreamReader(System.in), "<stdin>").interactive(!launcherOutput).build();
             // @formatter:on
         } else {
-            source = Source.newBuilder(SL, new File(file)).interactive(!launcherOutput).build();
+            source = Source.newBuilder(LAMA, new File(file)).interactive(!launcherOutput).build();
         }
 
         System.exit(executeSource(source, System.in, System.out, options, launcherOutput));
@@ -92,7 +92,7 @@ public final class SLMain {
         Context context;
         PrintStream err = System.err;
         try {
-            context = Context.newBuilder(SL).in(in).out(out).options(options).allowAllAccess(true).build();
+            context = Context.newBuilder(LAMA).in(in).out(out).options(options).allowAllAccess(true).build();
         } catch (IllegalArgumentException e) {
             err.println(e.getMessage());
             return 1;
@@ -104,10 +104,6 @@ public final class SLMain {
 
         try {
             Value result = context.eval(source);
-            if (context.getBindings(SL).getMember("main") == null) {
-                err.println("No function main() defined in SL source file.");
-                return 1;
-            }
             if (launcherOutput && !result.isNull()) {
                 out.println(result.toString());
             }

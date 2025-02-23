@@ -50,7 +50,7 @@
     <graalvm.version>23.1.0</graalvm.version>
     <maven.compiler.source>17</maven.compiler.source>
     <maven.compiler.target>17</maven.compiler.target>
-    <launcherClass>org.graalvm.sl.launcher/com.oracle.truffle.sl.launcher.SLMain</launcherClass>
+    <launcherClass>org.graalvm.sl.launcher/ru.usachev63.lamatruffle.launcher.LamaMain</launcherClass>
   </properties>
   <packaging>pom</packaging>
   <modules>
@@ -58,5 +58,6 @@
     <module>tck</module>
     <module>launcher</module>
     <module>standalone</module>
+    <module>lamalanguage</module>
   </modules>
 </project>

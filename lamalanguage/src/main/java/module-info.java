@@ -38,7 +38,13 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-open module org.graalvm.sl.launcher {
-	requires org.graalvm.polyglot;
-	exports ru.usachev63.lamatruffle.launcher;
+module ru.usachev63.lamatruffle {
+  requires java.base;
+  requires java.logging;
+  requires jdk.unsupported;
+  requires org.antlr.antlr4.runtime;
+  requires org.graalvm.polyglot;
+  requires org.graalvm.truffle;
+  provides  com.oracle.truffle.api.provider.TruffleLanguageProvider with
+    ru.usachev63.lamatruffle.LamaLanguageProvider;
 }
