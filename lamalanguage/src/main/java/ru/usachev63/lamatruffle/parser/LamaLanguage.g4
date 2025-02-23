@@ -81,11 +81,18 @@ LIDENT { factory.addVarDef($LIDENT); }
 primary returns [Expr result]
 :
 const_ { $result = $const_.result; }
+|
+stringLiteral { $result = $stringLiteral.result; }
 ;
 
 const_ returns [Const result]
 :
 DECIMAL { $result = factory.createConst($DECIMAL); }
+;
+
+stringLiteral returns [StringLiteral result]
+:
+STRING { $result = factory.createStringLiteral($STRING); }
 ;
 
 // lexer
@@ -100,4 +107,4 @@ fragment DIGIT : [0-9];
 UIDENT : [A-Z][a-zA-Z_0-9]*;
 LIDENT : [a-z][a-zA-Z_0-9]*;
 DECIMAL : '-'? [0-9]+;
-STRING : '"' ([^"]|'""')* '"';
+STRING : '"' (~["\r\n] | '""')* '"';

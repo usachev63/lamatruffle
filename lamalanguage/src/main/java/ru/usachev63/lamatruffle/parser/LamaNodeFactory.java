@@ -6,10 +6,7 @@ import com.oracle.truffle.api.source.Source;
 import com.oracle.truffle.api.strings.TruffleString;
 import org.antlr.v4.runtime.Token;
 import ru.usachev63.lamatruffle.LamaLanguage;
-import ru.usachev63.lamatruffle.nodes.Const;
-import ru.usachev63.lamatruffle.nodes.Expr;
-import ru.usachev63.lamatruffle.nodes.LamaRootNode;
-import ru.usachev63.lamatruffle.nodes.ScopeExpr;
+import ru.usachev63.lamatruffle.nodes.*;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -26,14 +23,6 @@ public class LamaNodeFactory {
     public void createMain(ScopeExpr body) {
         this.main = new LamaRootNode(language, frameDescriptorBuilder.build(), body, null, TruffleString.fromJavaStringUncached("main", TruffleString.Encoding.UTF_8));
         frameDescriptorBuilder = null;
-    }
-
-    public Const createConst(Token literalToken) {
-        try {
-            return new Const(Long.parseLong(literalToken.getText()));
-        } catch (NumberFormatException e) {
-            return null;
-        }
     }
 
     private final LamaLanguage language;
@@ -63,7 +52,8 @@ public class LamaNodeFactory {
         }
     }
 
-    /* State while parsing scope expr.*/
+    /* parsing scope begin */
+
     private LexicalScope lexicalScope;
 
     public void startScope() {
@@ -83,5 +73,24 @@ public class LamaNodeFactory {
         ScopeExpr result = new ScopeExpr(null, body);
         lexicalScope = null;
         return result;
+    }
+
+    /* parsing scope end */
+
+    public Const createConst(Token literalToken) {
+        try {
+            return new Const(Long.parseLong(literalToken.getText()));
+        } catch (NumberFormatException e) {
+            return null;
+        }
+    }
+
+    public StringLiteral createStringLiteral(Token literalToken) {
+        return new StringLiteral(TruffleString.fromJavaStringUncached(stringLiteralValueOf(literalToken.getText()), TruffleString.Encoding.US_ASCII));
+    }
+
+    private String stringLiteralValueOf(String rawText) {
+        assert rawText.length() >= 2;
+        return rawText.substring(1, rawText.length() - 1).replaceAll("\"\"", "\"");
     }
 }
