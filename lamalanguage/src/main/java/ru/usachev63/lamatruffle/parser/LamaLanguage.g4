@@ -43,7 +43,7 @@ public static RootCallTarget parseLama(LamaLanguage language, Source source) {
     BailoutErrorListener listener = new BailoutErrorListener(source);
     lexer.addErrorListener(listener);
     parser.addErrorListener(listener);
-    parser.factory = new LamaNodeFactory(language);
+    parser.factory = new LamaNodeFactory(language, source);
     parser.lama();
     return parser.factory.getMain().getCallTarget();
 }
@@ -53,12 +53,39 @@ public static RootCallTarget parseLama(LamaLanguage language, Source source) {
 
 lama
 :
-const_ { factory.createMain($const_.result); }
+scopeExpr { factory.createMain($scopeExpr.result); }
+EOF
+;
+
+scopeExpr returns [ScopeExpr result]
+: { factory.startScope(); }
+definition*
+primary? { Expr body = null;
+           if ($primary.ctx != null)
+             body = $primary.result;
+           $result = factory.finishScope(body);
+         }
+;
+
+definition
+:
+'var'
+LIDENT { factory.addVarDef($LIDENT); }
+(
+  ','
+  LIDENT { factory.addVarDef($LIDENT); }
+) *
+';'
+;
+
+primary returns [Expr result]
+:
+const_ { $result = $const_.result; }
 ;
 
 const_ returns [Const result]
 :
-NUMERIC_LITERAL { $result = factory.createConst($NUMERIC_LITERAL); }
+DECIMAL { $result = factory.createConst($DECIMAL); }
 ;
 
 // lexer
@@ -67,8 +94,10 @@ WS : [ \t\r\n\u000C]+ -> skip;
 COMMENT : '(*' .*? '*)' -> skip;
 LINE_COMMENT : '--' ~[\r\n]* -> skip;
 
-fragment LETTER : [a-z];
 fragment NON_ZERO_DIGIT : [1-9];
 fragment DIGIT : [0-9];
 
-NUMERIC_LITERAL : '0' | NON_ZERO_DIGIT DIGIT*;
+UIDENT : [A-Z][a-zA-Z_0-9]*;
+LIDENT : [a-z][a-zA-Z_0-9]*;
+DECIMAL : '-'? [0-9]+;
+STRING : '"' ([^"]|'""')* '"';

@@ -1,24 +1,31 @@
 package ru.usachev63.lamatruffle.parser;
 
-import com.oracle.truffle.api.RootCallTarget;
 import com.oracle.truffle.api.frame.FrameDescriptor;
+import com.oracle.truffle.api.frame.FrameSlotKind;
 import com.oracle.truffle.api.source.Source;
-import com.oracle.truffle.api.source.SourceSection;
 import com.oracle.truffle.api.strings.TruffleString;
 import org.antlr.v4.runtime.Token;
 import ru.usachev63.lamatruffle.LamaLanguage;
 import ru.usachev63.lamatruffle.nodes.Const;
+import ru.usachev63.lamatruffle.nodes.Expr;
 import ru.usachev63.lamatruffle.nodes.LamaRootNode;
+import ru.usachev63.lamatruffle.nodes.ScopeExpr;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 
 public class LamaNodeFactory {
-    public LamaNodeFactory(LamaLanguage language) {
+    public LamaNodeFactory(LamaLanguage language, Source source) {
         this.language = language;
+        this.source=source;
     }
 
     public LamaRootNode getMain() {return main;}
 
-    public void createMain(Const body) {
-        this.main = new LamaRootNode(language, new FrameDescriptor(), body, null, TruffleString.fromJavaStringUncached("main", TruffleString.Encoding.UTF_8));
+    public void createMain(ScopeExpr body) {
+        this.main = new LamaRootNode(language, frameDescriptorBuilder.build(), body, null, TruffleString.fromJavaStringUncached("main", TruffleString.Encoding.UTF_8));
+        frameDescriptorBuilder = null;
     }
 
     public Const createConst(Token literalToken) {
@@ -30,5 +37,51 @@ public class LamaNodeFactory {
     }
 
     private final LamaLanguage language;
+    private final Source source;
     private LamaRootNode main;
+
+    /* State while parsing a function. */
+    private FrameDescriptor.Builder frameDescriptorBuilder = FrameDescriptor.newBuilder();
+
+    static class LexicalScope {
+        protected final LexicalScope outer;
+        protected final Map<TruffleString, Integer> locals = new HashMap<>();
+
+        LexicalScope(LexicalScope outer) {
+            this.outer = outer;
+        }
+
+        public Integer find(TruffleString name) {
+            Integer result = locals.get(name);
+            if (result != null) {
+                return result;
+            } else if (outer != null) {
+                return outer.find(name);
+            } else {
+                return null;
+            }
+        }
+    }
+
+    /* State while parsing scope expr.*/
+    private LexicalScope lexicalScope;
+
+    public void startScope() {
+        lexicalScope = new LexicalScope(lexicalScope);
+    }
+
+    public void addVarDef(Token varNameToken) {
+        TruffleString name = TruffleString.fromJavaStringUncached(varNameToken.getText(), TruffleString.Encoding.US_ASCII);
+        if (lexicalScope.find(name) != null) {
+            throw new LamaParseError(source, varNameToken.getLine(), varNameToken.getCharPositionInLine(), 1, String.format("cannot redefine %s", name));
+        }
+        int slot = frameDescriptorBuilder.addSlot(FrameSlotKind.Illegal, name, null);
+        lexicalScope.locals.put(name, slot);
+    }
+
+    public ScopeExpr finishScope(Expr body) {
+        ScopeExpr result = new ScopeExpr(null, body);
+        lexicalScope = null;
+        return result;
+    }
 }

@@ -28,24 +28,28 @@ public class LamaLanguageParser extends Parser {
 	protected static final PredictionContextCache _sharedContextCache =
 		new PredictionContextCache();
 	public static final int
-		WS=1, COMMENT=2, LINE_COMMENT=3, NUMERIC_LITERAL=4;
+		T__0=1, T__1=2, T__2=3, WS=4, COMMENT=5, LINE_COMMENT=6, UIDENT=7, LIDENT=8, 
+		DECIMAL=9, STRING=10;
 	public static final int
-		RULE_lama = 0, RULE_const_ = 1;
+		RULE_lama = 0, RULE_scopeExpr = 1, RULE_definition = 2, RULE_primary = 3, 
+		RULE_const_ = 4;
 	private static String[] makeRuleNames() {
 		return new String[] {
-			"lama", "const_"
+			"lama", "scopeExpr", "definition", "primary", "const_"
 		};
 	}
 	public static final String[] ruleNames = makeRuleNames();
 
 	private static String[] makeLiteralNames() {
 		return new String[] {
+			null, "'var'", "','", "';'"
 		};
 	}
 	private static final String[] _LITERAL_NAMES = makeLiteralNames();
 	private static String[] makeSymbolicNames() {
 		return new String[] {
-			null, "WS", "COMMENT", "LINE_COMMENT", "NUMERIC_LITERAL"
+			null, null, null, null, "WS", "COMMENT", "LINE_COMMENT", "UIDENT", "LIDENT", 
+			"DECIMAL", "STRING"
 		};
 	}
 	private static final String[] _SYMBOLIC_NAMES = makeSymbolicNames();
@@ -123,7 +127,7 @@ public class LamaLanguageParser extends Parser {
 	    BailoutErrorListener listener = new BailoutErrorListener(source);
 	    lexer.addErrorListener(listener);
 	    parser.addErrorListener(listener);
-	    parser.factory = new LamaNodeFactory(language);
+	    parser.factory = new LamaNodeFactory(language, source);
 	    parser.lama();
 	    return parser.factory.getMain().getCallTarget();
 	}
@@ -135,10 +139,11 @@ public class LamaLanguageParser extends Parser {
 
 	@SuppressWarnings("CheckReturnValue")
 	public static class LamaContext extends ParserRuleContext {
-		public Const_Context const_;
-		public Const_Context const_() {
-			return getRuleContext(Const_Context.class,0);
+		public ScopeExprContext scopeExpr;
+		public ScopeExprContext scopeExpr() {
+			return getRuleContext(ScopeExprContext.class,0);
 		}
+		public TerminalNode EOF() { return getToken(LamaLanguageParser.EOF, 0); }
 		public LamaContext(ParserRuleContext parent, int invokingState) {
 			super(parent, invokingState);
 		}
@@ -151,9 +156,172 @@ public class LamaLanguageParser extends Parser {
 		try {
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(4);
-			((LamaContext)_localctx).const_ = const_();
-			 factory.createMain(((LamaContext)_localctx).const_.result); 
+			setState(10);
+			((LamaContext)_localctx).scopeExpr = scopeExpr();
+			 factory.createMain(((LamaContext)_localctx).scopeExpr.result); 
+			setState(12);
+			match(EOF);
+			}
+		}
+		catch (RecognitionException re) {
+			_localctx.exception = re;
+			_errHandler.reportError(this, re);
+			_errHandler.recover(this, re);
+		}
+		finally {
+			exitRule();
+		}
+		return _localctx;
+	}
+
+	@SuppressWarnings("CheckReturnValue")
+	public static class ScopeExprContext extends ParserRuleContext {
+		public ScopeExpr result;
+		public PrimaryContext primary;
+		public List<DefinitionContext> definition() {
+			return getRuleContexts(DefinitionContext.class);
+		}
+		public DefinitionContext definition(int i) {
+			return getRuleContext(DefinitionContext.class,i);
+		}
+		public PrimaryContext primary() {
+			return getRuleContext(PrimaryContext.class,0);
+		}
+		public ScopeExprContext(ParserRuleContext parent, int invokingState) {
+			super(parent, invokingState);
+		}
+		@Override public int getRuleIndex() { return RULE_scopeExpr; }
+	}
+
+	public final ScopeExprContext scopeExpr() throws RecognitionException {
+		ScopeExprContext _localctx = new ScopeExprContext(_ctx, getState());
+		enterRule(_localctx, 2, RULE_scopeExpr);
+		int _la;
+		try {
+			enterOuterAlt(_localctx, 1);
+			{
+			 factory.startScope(); 
+			setState(18);
+			_errHandler.sync(this);
+			_la = _input.LA(1);
+			while (_la==T__0) {
+				{
+				{
+				setState(15);
+				definition();
+				}
+				}
+				setState(20);
+				_errHandler.sync(this);
+				_la = _input.LA(1);
+			}
+			setState(22);
+			_errHandler.sync(this);
+			_la = _input.LA(1);
+			if (_la==DECIMAL) {
+				{
+				setState(21);
+				((ScopeExprContext)_localctx).primary = primary();
+				}
+			}
+
+			 Expr body = null;
+			           if (((ScopeExprContext)_localctx).primary != null)
+			             body = ((ScopeExprContext)_localctx).primary.result;
+			           ((ScopeExprContext)_localctx).result =  factory.finishScope(body);
+			         
+			}
+		}
+		catch (RecognitionException re) {
+			_localctx.exception = re;
+			_errHandler.reportError(this, re);
+			_errHandler.recover(this, re);
+		}
+		finally {
+			exitRule();
+		}
+		return _localctx;
+	}
+
+	@SuppressWarnings("CheckReturnValue")
+	public static class DefinitionContext extends ParserRuleContext {
+		public Token LIDENT;
+		public List<TerminalNode> LIDENT() { return getTokens(LamaLanguageParser.LIDENT); }
+		public TerminalNode LIDENT(int i) {
+			return getToken(LamaLanguageParser.LIDENT, i);
+		}
+		public DefinitionContext(ParserRuleContext parent, int invokingState) {
+			super(parent, invokingState);
+		}
+		@Override public int getRuleIndex() { return RULE_definition; }
+	}
+
+	public final DefinitionContext definition() throws RecognitionException {
+		DefinitionContext _localctx = new DefinitionContext(_ctx, getState());
+		enterRule(_localctx, 4, RULE_definition);
+		int _la;
+		try {
+			enterOuterAlt(_localctx, 1);
+			{
+			setState(26);
+			match(T__0);
+			setState(27);
+			((DefinitionContext)_localctx).LIDENT = match(LIDENT);
+			 factory.addVarDef(((DefinitionContext)_localctx).LIDENT); 
+			setState(34);
+			_errHandler.sync(this);
+			_la = _input.LA(1);
+			while (_la==T__1) {
+				{
+				{
+				setState(29);
+				match(T__1);
+				setState(30);
+				((DefinitionContext)_localctx).LIDENT = match(LIDENT);
+				 factory.addVarDef(((DefinitionContext)_localctx).LIDENT); 
+				}
+				}
+				setState(36);
+				_errHandler.sync(this);
+				_la = _input.LA(1);
+			}
+			setState(37);
+			match(T__2);
+			}
+		}
+		catch (RecognitionException re) {
+			_localctx.exception = re;
+			_errHandler.reportError(this, re);
+			_errHandler.recover(this, re);
+		}
+		finally {
+			exitRule();
+		}
+		return _localctx;
+	}
+
+	@SuppressWarnings("CheckReturnValue")
+	public static class PrimaryContext extends ParserRuleContext {
+		public Expr result;
+		public Const_Context const_;
+		public Const_Context const_() {
+			return getRuleContext(Const_Context.class,0);
+		}
+		public PrimaryContext(ParserRuleContext parent, int invokingState) {
+			super(parent, invokingState);
+		}
+		@Override public int getRuleIndex() { return RULE_primary; }
+	}
+
+	public final PrimaryContext primary() throws RecognitionException {
+		PrimaryContext _localctx = new PrimaryContext(_ctx, getState());
+		enterRule(_localctx, 6, RULE_primary);
+		try {
+			enterOuterAlt(_localctx, 1);
+			{
+			setState(39);
+			((PrimaryContext)_localctx).const_ = const_();
+			 ((PrimaryContext)_localctx).result =  ((PrimaryContext)_localctx).const_.result; 
 			}
 		}
 		catch (RecognitionException re) {
@@ -170,8 +338,8 @@ public class LamaLanguageParser extends Parser {
 	@SuppressWarnings("CheckReturnValue")
 	public static class Const_Context extends ParserRuleContext {
 		public Const result;
-		public Token NUMERIC_LITERAL;
-		public TerminalNode NUMERIC_LITERAL() { return getToken(LamaLanguageParser.NUMERIC_LITERAL, 0); }
+		public Token DECIMAL;
+		public TerminalNode DECIMAL() { return getToken(LamaLanguageParser.DECIMAL, 0); }
 		public Const_Context(ParserRuleContext parent, int invokingState) {
 			super(parent, invokingState);
 		}
@@ -180,13 +348,13 @@ public class LamaLanguageParser extends Parser {
 
 	public final Const_Context const_() throws RecognitionException {
 		Const_Context _localctx = new Const_Context(_ctx, getState());
-		enterRule(_localctx, 2, RULE_const_);
+		enterRule(_localctx, 8, RULE_const_);
 		try {
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(7);
-			((Const_Context)_localctx).NUMERIC_LITERAL = match(NUMERIC_LITERAL);
-			 ((Const_Context)_localctx).result =  factory.createConst(((Const_Context)_localctx).NUMERIC_LITERAL); 
+			setState(42);
+			((Const_Context)_localctx).DECIMAL = match(DECIMAL);
+			 ((Const_Context)_localctx).result =  factory.createConst(((Const_Context)_localctx).DECIMAL); 
 			}
 		}
 		catch (RecognitionException re) {
@@ -201,13 +369,35 @@ public class LamaLanguageParser extends Parser {
 	}
 
 	public static final String _serializedATN =
-		"\u0004\u0001\u0004\u000b\u0002\u0000\u0007\u0000\u0002\u0001\u0007\u0001"+
-		"\u0001\u0000\u0001\u0000\u0001\u0000\u0001\u0001\u0001\u0001\u0001\u0001"+
-		"\u0001\u0001\u0000\u0000\u0002\u0000\u0002\u0000\u0000\b\u0000\u0004\u0001"+
-		"\u0000\u0000\u0000\u0002\u0007\u0001\u0000\u0000\u0000\u0004\u0005\u0003"+
-		"\u0002\u0001\u0000\u0005\u0006\u0006\u0000\uffff\uffff\u0000\u0006\u0001"+
-		"\u0001\u0000\u0000\u0000\u0007\b\u0005\u0004\u0000\u0000\b\t\u0006\u0001"+
-		"\uffff\uffff\u0000\t\u0003\u0001\u0000\u0000\u0000\u0000";
+		"\u0004\u0001\n.\u0002\u0000\u0007\u0000\u0002\u0001\u0007\u0001\u0002"+
+		"\u0002\u0007\u0002\u0002\u0003\u0007\u0003\u0002\u0004\u0007\u0004\u0001"+
+		"\u0000\u0001\u0000\u0001\u0000\u0001\u0000\u0001\u0001\u0001\u0001\u0005"+
+		"\u0001\u0011\b\u0001\n\u0001\f\u0001\u0014\t\u0001\u0001\u0001\u0003\u0001"+
+		"\u0017\b\u0001\u0001\u0001\u0001\u0001\u0001\u0002\u0001\u0002\u0001\u0002"+
+		"\u0001\u0002\u0001\u0002\u0001\u0002\u0005\u0002!\b\u0002\n\u0002\f\u0002"+
+		"$\t\u0002\u0001\u0002\u0001\u0002\u0001\u0003\u0001\u0003\u0001\u0003"+
+		"\u0001\u0004\u0001\u0004\u0001\u0004\u0001\u0004\u0000\u0000\u0005\u0000"+
+		"\u0002\u0004\u0006\b\u0000\u0000+\u0000\n\u0001\u0000\u0000\u0000\u0002"+
+		"\u000e\u0001\u0000\u0000\u0000\u0004\u001a\u0001\u0000\u0000\u0000\u0006"+
+		"\'\u0001\u0000\u0000\u0000\b*\u0001\u0000\u0000\u0000\n\u000b\u0003\u0002"+
+		"\u0001\u0000\u000b\f\u0006\u0000\uffff\uffff\u0000\f\r\u0005\u0000\u0000"+
+		"\u0001\r\u0001\u0001\u0000\u0000\u0000\u000e\u0012\u0006\u0001\uffff\uffff"+
+		"\u0000\u000f\u0011\u0003\u0004\u0002\u0000\u0010\u000f\u0001\u0000\u0000"+
+		"\u0000\u0011\u0014\u0001\u0000\u0000\u0000\u0012\u0010\u0001\u0000\u0000"+
+		"\u0000\u0012\u0013\u0001\u0000\u0000\u0000\u0013\u0016\u0001\u0000\u0000"+
+		"\u0000\u0014\u0012\u0001\u0000\u0000\u0000\u0015\u0017\u0003\u0006\u0003"+
+		"\u0000\u0016\u0015\u0001\u0000\u0000\u0000\u0016\u0017\u0001\u0000\u0000"+
+		"\u0000\u0017\u0018\u0001\u0000\u0000\u0000\u0018\u0019\u0006\u0001\uffff"+
+		"\uffff\u0000\u0019\u0003\u0001\u0000\u0000\u0000\u001a\u001b\u0005\u0001"+
+		"\u0000\u0000\u001b\u001c\u0005\b\u0000\u0000\u001c\"\u0006\u0002\uffff"+
+		"\uffff\u0000\u001d\u001e\u0005\u0002\u0000\u0000\u001e\u001f\u0005\b\u0000"+
+		"\u0000\u001f!\u0006\u0002\uffff\uffff\u0000 \u001d\u0001\u0000\u0000\u0000"+
+		"!$\u0001\u0000\u0000\u0000\" \u0001\u0000\u0000\u0000\"#\u0001\u0000\u0000"+
+		"\u0000#%\u0001\u0000\u0000\u0000$\"\u0001\u0000\u0000\u0000%&\u0005\u0003"+
+		"\u0000\u0000&\u0005\u0001\u0000\u0000\u0000\'(\u0003\b\u0004\u0000()\u0006"+
+		"\u0003\uffff\uffff\u0000)\u0007\u0001\u0000\u0000\u0000*+\u0005\t\u0000"+
+		"\u0000+,\u0006\u0004\uffff\uffff\u0000,\t\u0001\u0000\u0000\u0000\u0003"+
+		"\u0012\u0016\"";
 	public static final ATN _ATN =
 		new ATNDeserializer().deserialize(_serializedATN.toCharArray());
 	static {
