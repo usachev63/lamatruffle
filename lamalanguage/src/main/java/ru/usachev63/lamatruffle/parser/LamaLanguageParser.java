@@ -31,12 +31,12 @@ public class LamaLanguageParser extends Parser {
 		T__0=1, T__1=2, T__2=3, T__3=4, T__4=5, WS=6, COMMENT=7, LINE_COMMENT=8, 
 		UIDENT=9, LIDENT=10, DECIMAL=11, STRING=12, CHAR=13;
 	public static final int
-		RULE_lama = 0, RULE_scopeExpr = 1, RULE_definition = 2, RULE_primary = 3, 
-		RULE_const_ = 4, RULE_stringLiteral = 5, RULE_charLiteral = 6;
+		RULE_lama = 0, RULE_scopeExpr = 1, RULE_definition = 2, RULE_expression = 3, 
+		RULE_primary = 4, RULE_const_ = 5, RULE_stringLiteral = 6, RULE_charLiteral = 7;
 	private static String[] makeRuleNames() {
 		return new String[] {
-			"lama", "scopeExpr", "definition", "primary", "const_", "stringLiteral", 
-			"charLiteral"
+			"lama", "scopeExpr", "definition", "expression", "primary", "const_", 
+			"stringLiteral", "charLiteral"
 		};
 	}
 	public static final String[] ruleNames = makeRuleNames();
@@ -157,10 +157,10 @@ public class LamaLanguageParser extends Parser {
 		try {
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(14);
+			setState(16);
 			((LamaContext)_localctx).scopeExpr = scopeExpr();
 			 factory.createMain(((LamaContext)_localctx).scopeExpr.result); 
-			setState(16);
+			setState(18);
 			match(EOF);
 			}
 		}
@@ -178,15 +178,15 @@ public class LamaLanguageParser extends Parser {
 	@SuppressWarnings("CheckReturnValue")
 	public static class ScopeExprContext extends ParserRuleContext {
 		public ScopeExpr result;
-		public PrimaryContext primary;
+		public ExpressionContext expression;
 		public List<DefinitionContext> definition() {
 			return getRuleContexts(DefinitionContext.class);
 		}
 		public DefinitionContext definition(int i) {
 			return getRuleContext(DefinitionContext.class,i);
 		}
-		public PrimaryContext primary() {
-			return getRuleContext(PrimaryContext.class,0);
+		public ExpressionContext expression() {
+			return getRuleContext(ExpressionContext.class,0);
 		}
 		public ScopeExprContext(ParserRuleContext parent, int invokingState) {
 			super(parent, invokingState);
@@ -202,33 +202,33 @@ public class LamaLanguageParser extends Parser {
 			enterOuterAlt(_localctx, 1);
 			{
 			 factory.startScope(); 
-			setState(22);
+			setState(24);
 			_errHandler.sync(this);
 			_la = _input.LA(1);
 			while (_la==T__0) {
 				{
 				{
-				setState(19);
+				setState(21);
 				definition();
 				}
 				}
-				setState(24);
+				setState(26);
 				_errHandler.sync(this);
 				_la = _input.LA(1);
 			}
-			setState(26);
+			setState(28);
 			_errHandler.sync(this);
 			_la = _input.LA(1);
 			if ((((_la) & ~0x3f) == 0 && ((1L << _la) & 14384L) != 0)) {
 				{
-				setState(25);
-				((ScopeExprContext)_localctx).primary = primary();
+				setState(27);
+				((ScopeExprContext)_localctx).expression = expression();
 				}
 			}
 
 			 Expr body = null;
-			           if (((ScopeExprContext)_localctx).primary != null)
-			             body = ((ScopeExprContext)_localctx).primary.result;
+			           if (((ScopeExprContext)_localctx).expression != null)
+			             body = ((ScopeExprContext)_localctx).expression.result;
 			           ((ScopeExprContext)_localctx).result =  factory.finishScope(body);
 			         
 			}
@@ -264,30 +264,83 @@ public class LamaLanguageParser extends Parser {
 		try {
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(30);
+			setState(32);
 			match(T__0);
-			setState(31);
+			setState(33);
 			((DefinitionContext)_localctx).LIDENT = match(LIDENT);
 			 factory.addVarDef(((DefinitionContext)_localctx).LIDENT); 
-			setState(38);
+			setState(40);
 			_errHandler.sync(this);
 			_la = _input.LA(1);
 			while (_la==T__1) {
 				{
 				{
-				setState(33);
+				setState(35);
 				match(T__1);
-				setState(34);
+				setState(36);
 				((DefinitionContext)_localctx).LIDENT = match(LIDENT);
 				 factory.addVarDef(((DefinitionContext)_localctx).LIDENT); 
 				}
 				}
-				setState(40);
+				setState(42);
 				_errHandler.sync(this);
 				_la = _input.LA(1);
 			}
-			setState(41);
+			setState(43);
 			match(T__2);
+			}
+		}
+		catch (RecognitionException re) {
+			_localctx.exception = re;
+			_errHandler.reportError(this, re);
+			_errHandler.recover(this, re);
+		}
+		finally {
+			exitRule();
+		}
+		return _localctx;
+	}
+
+	@SuppressWarnings("CheckReturnValue")
+	public static class ExpressionContext extends ParserRuleContext {
+		public Expr result;
+		public PrimaryContext primary;
+		public ExpressionContext expression;
+		public PrimaryContext primary() {
+			return getRuleContext(PrimaryContext.class,0);
+		}
+		public ExpressionContext expression() {
+			return getRuleContext(ExpressionContext.class,0);
+		}
+		public ExpressionContext(ParserRuleContext parent, int invokingState) {
+			super(parent, invokingState);
+		}
+		@Override public int getRuleIndex() { return RULE_expression; }
+	}
+
+	public final ExpressionContext expression() throws RecognitionException {
+		ExpressionContext _localctx = new ExpressionContext(_ctx, getState());
+		enterRule(_localctx, 6, RULE_expression);
+		int _la;
+		try {
+			enterOuterAlt(_localctx, 1);
+			{
+			setState(45);
+			((ExpressionContext)_localctx).primary = primary();
+			 ((ExpressionContext)_localctx).result =  ((ExpressionContext)_localctx).primary.result; 
+			setState(51);
+			_errHandler.sync(this);
+			_la = _input.LA(1);
+			if (_la==T__2) {
+				{
+				setState(47);
+				match(T__2);
+				setState(48);
+				((ExpressionContext)_localctx).expression = expression();
+				 ((ExpressionContext)_localctx).result =  new Seq(_localctx.result, ((ExpressionContext)_localctx).expression.result); 
+				}
+			}
+
 			}
 		}
 		catch (RecognitionException re) {
@@ -324,15 +377,15 @@ public class LamaLanguageParser extends Parser {
 
 	public final PrimaryContext primary() throws RecognitionException {
 		PrimaryContext _localctx = new PrimaryContext(_ctx, getState());
-		enterRule(_localctx, 6, RULE_primary);
+		enterRule(_localctx, 8, RULE_primary);
 		try {
-			setState(56);
+			setState(66);
 			_errHandler.sync(this);
 			switch (_input.LA(1)) {
 			case DECIMAL:
 				enterOuterAlt(_localctx, 1);
 				{
-				setState(43);
+				setState(53);
 				((PrimaryContext)_localctx).const_ = const_();
 				 ((PrimaryContext)_localctx).result =  ((PrimaryContext)_localctx).const_.result; 
 				}
@@ -340,7 +393,7 @@ public class LamaLanguageParser extends Parser {
 			case STRING:
 				enterOuterAlt(_localctx, 2);
 				{
-				setState(46);
+				setState(56);
 				((PrimaryContext)_localctx).stringLiteral = stringLiteral();
 				 ((PrimaryContext)_localctx).result =  ((PrimaryContext)_localctx).stringLiteral.result; 
 				}
@@ -348,7 +401,7 @@ public class LamaLanguageParser extends Parser {
 			case CHAR:
 				enterOuterAlt(_localctx, 3);
 				{
-				setState(49);
+				setState(59);
 				((PrimaryContext)_localctx).charLiteral = charLiteral();
 				 ((PrimaryContext)_localctx).result =  ((PrimaryContext)_localctx).charLiteral.result; 
 				}
@@ -356,7 +409,7 @@ public class LamaLanguageParser extends Parser {
 			case T__3:
 				enterOuterAlt(_localctx, 4);
 				{
-				setState(52);
+				setState(62);
 				match(T__3);
 				 ((PrimaryContext)_localctx).result =  new Const(1); 
 				}
@@ -364,7 +417,7 @@ public class LamaLanguageParser extends Parser {
 			case T__4:
 				enterOuterAlt(_localctx, 5);
 				{
-				setState(54);
+				setState(64);
 				match(T__4);
 				 ((PrimaryContext)_localctx).result =  new Const(0); 
 				}
@@ -397,11 +450,11 @@ public class LamaLanguageParser extends Parser {
 
 	public final Const_Context const_() throws RecognitionException {
 		Const_Context _localctx = new Const_Context(_ctx, getState());
-		enterRule(_localctx, 8, RULE_const_);
+		enterRule(_localctx, 10, RULE_const_);
 		try {
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(58);
+			setState(68);
 			((Const_Context)_localctx).DECIMAL = match(DECIMAL);
 			 ((Const_Context)_localctx).result =  factory.createConst(((Const_Context)_localctx).DECIMAL); 
 			}
@@ -430,11 +483,11 @@ public class LamaLanguageParser extends Parser {
 
 	public final StringLiteralContext stringLiteral() throws RecognitionException {
 		StringLiteralContext _localctx = new StringLiteralContext(_ctx, getState());
-		enterRule(_localctx, 10, RULE_stringLiteral);
+		enterRule(_localctx, 12, RULE_stringLiteral);
 		try {
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(61);
+			setState(71);
 			((StringLiteralContext)_localctx).STRING = match(STRING);
 			 ((StringLiteralContext)_localctx).result =  factory.createStringLiteral(((StringLiteralContext)_localctx).STRING); 
 			}
@@ -463,11 +516,11 @@ public class LamaLanguageParser extends Parser {
 
 	public final CharLiteralContext charLiteral() throws RecognitionException {
 		CharLiteralContext _localctx = new CharLiteralContext(_ctx, getState());
-		enterRule(_localctx, 12, RULE_charLiteral);
+		enterRule(_localctx, 14, RULE_charLiteral);
 		try {
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(64);
+			setState(74);
 			((CharLiteralContext)_localctx).CHAR = match(CHAR);
 			 ((CharLiteralContext)_localctx).result =  factory.createCharLiteral(((CharLiteralContext)_localctx).CHAR); 
 			}
@@ -484,48 +537,53 @@ public class LamaLanguageParser extends Parser {
 	}
 
 	public static final String _serializedATN =
-		"\u0004\u0001\rD\u0002\u0000\u0007\u0000\u0002\u0001\u0007\u0001\u0002"+
+		"\u0004\u0001\rN\u0002\u0000\u0007\u0000\u0002\u0001\u0007\u0001\u0002"+
 		"\u0002\u0007\u0002\u0002\u0003\u0007\u0003\u0002\u0004\u0007\u0004\u0002"+
-		"\u0005\u0007\u0005\u0002\u0006\u0007\u0006\u0001\u0000\u0001\u0000\u0001"+
-		"\u0000\u0001\u0000\u0001\u0001\u0001\u0001\u0005\u0001\u0015\b\u0001\n"+
-		"\u0001\f\u0001\u0018\t\u0001\u0001\u0001\u0003\u0001\u001b\b\u0001\u0001"+
-		"\u0001\u0001\u0001\u0001\u0002\u0001\u0002\u0001\u0002\u0001\u0002\u0001"+
-		"\u0002\u0001\u0002\u0005\u0002%\b\u0002\n\u0002\f\u0002(\t\u0002\u0001"+
-		"\u0002\u0001\u0002\u0001\u0003\u0001\u0003\u0001\u0003\u0001\u0003\u0001"+
-		"\u0003\u0001\u0003\u0001\u0003\u0001\u0003\u0001\u0003\u0001\u0003\u0001"+
-		"\u0003\u0001\u0003\u0001\u0003\u0003\u00039\b\u0003\u0001\u0004\u0001"+
-		"\u0004\u0001\u0004\u0001\u0005\u0001\u0005\u0001\u0005\u0001\u0006\u0001"+
-		"\u0006\u0001\u0006\u0001\u0006\u0000\u0000\u0007\u0000\u0002\u0004\u0006"+
-		"\b\n\f\u0000\u0000C\u0000\u000e\u0001\u0000\u0000\u0000\u0002\u0012\u0001"+
-		"\u0000\u0000\u0000\u0004\u001e\u0001\u0000\u0000\u0000\u00068\u0001\u0000"+
-		"\u0000\u0000\b:\u0001\u0000\u0000\u0000\n=\u0001\u0000\u0000\u0000\f@"+
-		"\u0001\u0000\u0000\u0000\u000e\u000f\u0003\u0002\u0001\u0000\u000f\u0010"+
-		"\u0006\u0000\uffff\uffff\u0000\u0010\u0011\u0005\u0000\u0000\u0001\u0011"+
-		"\u0001\u0001\u0000\u0000\u0000\u0012\u0016\u0006\u0001\uffff\uffff\u0000"+
-		"\u0013\u0015\u0003\u0004\u0002\u0000\u0014\u0013\u0001\u0000\u0000\u0000"+
-		"\u0015\u0018\u0001\u0000\u0000\u0000\u0016\u0014\u0001\u0000\u0000\u0000"+
-		"\u0016\u0017\u0001\u0000\u0000\u0000\u0017\u001a\u0001\u0000\u0000\u0000"+
-		"\u0018\u0016\u0001\u0000\u0000\u0000\u0019\u001b\u0003\u0006\u0003\u0000"+
-		"\u001a\u0019\u0001\u0000\u0000\u0000\u001a\u001b\u0001\u0000\u0000\u0000"+
-		"\u001b\u001c\u0001\u0000\u0000\u0000\u001c\u001d\u0006\u0001\uffff\uffff"+
-		"\u0000\u001d\u0003\u0001\u0000\u0000\u0000\u001e\u001f\u0005\u0001\u0000"+
-		"\u0000\u001f \u0005\n\u0000\u0000 &\u0006\u0002\uffff\uffff\u0000!\"\u0005"+
-		"\u0002\u0000\u0000\"#\u0005\n\u0000\u0000#%\u0006\u0002\uffff\uffff\u0000"+
-		"$!\u0001\u0000\u0000\u0000%(\u0001\u0000\u0000\u0000&$\u0001\u0000\u0000"+
-		"\u0000&\'\u0001\u0000\u0000\u0000\')\u0001\u0000\u0000\u0000(&\u0001\u0000"+
-		"\u0000\u0000)*\u0005\u0003\u0000\u0000*\u0005\u0001\u0000\u0000\u0000"+
-		"+,\u0003\b\u0004\u0000,-\u0006\u0003\uffff\uffff\u0000-9\u0001\u0000\u0000"+
-		"\u0000./\u0003\n\u0005\u0000/0\u0006\u0003\uffff\uffff\u000009\u0001\u0000"+
-		"\u0000\u000012\u0003\f\u0006\u000023\u0006\u0003\uffff\uffff\u000039\u0001"+
-		"\u0000\u0000\u000045\u0005\u0004\u0000\u000059\u0006\u0003\uffff\uffff"+
-		"\u000067\u0005\u0005\u0000\u000079\u0006\u0003\uffff\uffff\u00008+\u0001"+
-		"\u0000\u0000\u00008.\u0001\u0000\u0000\u000081\u0001\u0000\u0000\u0000"+
-		"84\u0001\u0000\u0000\u000086\u0001\u0000\u0000\u00009\u0007\u0001\u0000"+
-		"\u0000\u0000:;\u0005\u000b\u0000\u0000;<\u0006\u0004\uffff\uffff\u0000"+
-		"<\t\u0001\u0000\u0000\u0000=>\u0005\f\u0000\u0000>?\u0006\u0005\uffff"+
-		"\uffff\u0000?\u000b\u0001\u0000\u0000\u0000@A\u0005\r\u0000\u0000AB\u0006"+
-		"\u0006\uffff\uffff\u0000B\r\u0001\u0000\u0000\u0000\u0004\u0016\u001a"+
-		"&8";
+		"\u0005\u0007\u0005\u0002\u0006\u0007\u0006\u0002\u0007\u0007\u0007\u0001"+
+		"\u0000\u0001\u0000\u0001\u0000\u0001\u0000\u0001\u0001\u0001\u0001\u0005"+
+		"\u0001\u0017\b\u0001\n\u0001\f\u0001\u001a\t\u0001\u0001\u0001\u0003\u0001"+
+		"\u001d\b\u0001\u0001\u0001\u0001\u0001\u0001\u0002\u0001\u0002\u0001\u0002"+
+		"\u0001\u0002\u0001\u0002\u0001\u0002\u0005\u0002\'\b\u0002\n\u0002\f\u0002"+
+		"*\t\u0002\u0001\u0002\u0001\u0002\u0001\u0003\u0001\u0003\u0001\u0003"+
+		"\u0001\u0003\u0001\u0003\u0001\u0003\u0003\u00034\b\u0003\u0001\u0004"+
+		"\u0001\u0004\u0001\u0004\u0001\u0004\u0001\u0004\u0001\u0004\u0001\u0004"+
+		"\u0001\u0004\u0001\u0004\u0001\u0004\u0001\u0004\u0001\u0004\u0001\u0004"+
+		"\u0003\u0004C\b\u0004\u0001\u0005\u0001\u0005\u0001\u0005\u0001\u0006"+
+		"\u0001\u0006\u0001\u0006\u0001\u0007\u0001\u0007\u0001\u0007\u0001\u0007"+
+		"\u0000\u0000\b\u0000\u0002\u0004\u0006\b\n\f\u000e\u0000\u0000M\u0000"+
+		"\u0010\u0001\u0000\u0000\u0000\u0002\u0014\u0001\u0000\u0000\u0000\u0004"+
+		" \u0001\u0000\u0000\u0000\u0006-\u0001\u0000\u0000\u0000\bB\u0001\u0000"+
+		"\u0000\u0000\nD\u0001\u0000\u0000\u0000\fG\u0001\u0000\u0000\u0000\u000e"+
+		"J\u0001\u0000\u0000\u0000\u0010\u0011\u0003\u0002\u0001\u0000\u0011\u0012"+
+		"\u0006\u0000\uffff\uffff\u0000\u0012\u0013\u0005\u0000\u0000\u0001\u0013"+
+		"\u0001\u0001\u0000\u0000\u0000\u0014\u0018\u0006\u0001\uffff\uffff\u0000"+
+		"\u0015\u0017\u0003\u0004\u0002\u0000\u0016\u0015\u0001\u0000\u0000\u0000"+
+		"\u0017\u001a\u0001\u0000\u0000\u0000\u0018\u0016\u0001\u0000\u0000\u0000"+
+		"\u0018\u0019\u0001\u0000\u0000\u0000\u0019\u001c\u0001\u0000\u0000\u0000"+
+		"\u001a\u0018\u0001\u0000\u0000\u0000\u001b\u001d\u0003\u0006\u0003\u0000"+
+		"\u001c\u001b\u0001\u0000\u0000\u0000\u001c\u001d\u0001\u0000\u0000\u0000"+
+		"\u001d\u001e\u0001\u0000\u0000\u0000\u001e\u001f\u0006\u0001\uffff\uffff"+
+		"\u0000\u001f\u0003\u0001\u0000\u0000\u0000 !\u0005\u0001\u0000\u0000!"+
+		"\"\u0005\n\u0000\u0000\"(\u0006\u0002\uffff\uffff\u0000#$\u0005\u0002"+
+		"\u0000\u0000$%\u0005\n\u0000\u0000%\'\u0006\u0002\uffff\uffff\u0000&#"+
+		"\u0001\u0000\u0000\u0000\'*\u0001\u0000\u0000\u0000(&\u0001\u0000\u0000"+
+		"\u0000()\u0001\u0000\u0000\u0000)+\u0001\u0000\u0000\u0000*(\u0001\u0000"+
+		"\u0000\u0000+,\u0005\u0003\u0000\u0000,\u0005\u0001\u0000\u0000\u0000"+
+		"-.\u0003\b\u0004\u0000.3\u0006\u0003\uffff\uffff\u0000/0\u0005\u0003\u0000"+
+		"\u000001\u0003\u0006\u0003\u000012\u0006\u0003\uffff\uffff\u000024\u0001"+
+		"\u0000\u0000\u00003/\u0001\u0000\u0000\u000034\u0001\u0000\u0000\u0000"+
+		"4\u0007\u0001\u0000\u0000\u000056\u0003\n\u0005\u000067\u0006\u0004\uffff"+
+		"\uffff\u00007C\u0001\u0000\u0000\u000089\u0003\f\u0006\u00009:\u0006\u0004"+
+		"\uffff\uffff\u0000:C\u0001\u0000\u0000\u0000;<\u0003\u000e\u0007\u0000"+
+		"<=\u0006\u0004\uffff\uffff\u0000=C\u0001\u0000\u0000\u0000>?\u0005\u0004"+
+		"\u0000\u0000?C\u0006\u0004\uffff\uffff\u0000@A\u0005\u0005\u0000\u0000"+
+		"AC\u0006\u0004\uffff\uffff\u0000B5\u0001\u0000\u0000\u0000B8\u0001\u0000"+
+		"\u0000\u0000B;\u0001\u0000\u0000\u0000B>\u0001\u0000\u0000\u0000B@\u0001"+
+		"\u0000\u0000\u0000C\t\u0001\u0000\u0000\u0000DE\u0005\u000b\u0000\u0000"+
+		"EF\u0006\u0005\uffff\uffff\u0000F\u000b\u0001\u0000\u0000\u0000GH\u0005"+
+		"\f\u0000\u0000HI\u0006\u0006\uffff\uffff\u0000I\r\u0001\u0000\u0000\u0000"+
+		"JK\u0005\r\u0000\u0000KL\u0006\u0007\uffff\uffff\u0000L\u000f\u0001\u0000"+
+		"\u0000\u0000\u0005\u0018\u001c(3B";
 	public static final ATN _ATN =
 		new ATNDeserializer().deserialize(_serializedATN.toCharArray());
 	static {

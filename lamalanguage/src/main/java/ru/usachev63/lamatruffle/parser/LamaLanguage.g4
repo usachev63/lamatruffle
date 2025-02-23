@@ -60,9 +60,9 @@ EOF
 scopeExpr returns [ScopeExpr result]
 : { factory.startScope(); }
 definition*
-primary? { Expr body = null;
-           if ($primary.ctx != null)
-             body = $primary.result;
+expression? { Expr body = null;
+           if ($expression.ctx != null)
+             body = $expression.result;
            $result = factory.finishScope(body);
          }
 ;
@@ -76,6 +76,14 @@ LIDENT { factory.addVarDef($LIDENT); }
   LIDENT { factory.addVarDef($LIDENT); }
 ) *
 ';'
+;
+
+expression returns [Expr result]
+:
+primary { $result = $primary.result; }
+(
+  ';' expression { $result = new Seq($result, $expression.result); }
+)?
 ;
 
 primary returns [Expr result]
