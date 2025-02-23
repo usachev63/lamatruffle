@@ -85,6 +85,10 @@ const_ { $result = $const_.result; }
 stringLiteral { $result = $stringLiteral.result; }
 |
 charLiteral { $result = $charLiteral.result; }
+|
+'true' { $result = new Const(1); }
+|
+'false' { $result = new Const(0); }
 ;
 
 const_ returns [Const result]
