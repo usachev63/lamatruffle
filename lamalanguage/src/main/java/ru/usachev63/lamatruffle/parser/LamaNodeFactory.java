@@ -8,7 +8,9 @@ import org.antlr.v4.runtime.Token;
 import ru.usachev63.lamatruffle.LamaLanguage;
 import ru.usachev63.lamatruffle.nodes.*;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public class LamaNodeFactory {
@@ -54,23 +56,36 @@ public class LamaNodeFactory {
     /* parsing scope begin */
 
     private LexicalScope lexicalScope;
+    private List<Assn> scopeInitializers;
 
     public void startScope() {
         lexicalScope = new LexicalScope(lexicalScope);
+        scopeInitializers = new ArrayList<>();
     }
 
-    public void addVarDef(Token varNameToken) {
+    public int addVarDef(Token varNameToken) {
         TruffleString name = TruffleString.fromJavaStringUncached(varNameToken.getText(), TruffleString.Encoding.US_ASCII);
         if (lexicalScope.find(name) != null) {
             throw new LamaParseError(source, varNameToken.getLine(), varNameToken.getCharPositionInLine(), 1, String.format("cannot redefine %s", name));
         }
         int slot = frameDescriptorBuilder.addSlot(FrameSlotKind.Illegal, name, null);
         lexicalScope.locals.put(name, slot);
+        return slot;
+    }
+
+    public void addVarInitializer(int frameSlot, Expr value) {
+        scopeInitializers.add(new Assn(new LocalVarRef(frameSlot), value));
     }
 
     public ScopeExpr finishScope(Expr body) {
+        if (body == null)
+            body = new Skip();
+        for (Assn init : scopeInitializers.reversed()) {
+            body = new Seq(init, body);
+        }
         ScopeExpr result = new ScopeExpr(null, body);
         lexicalScope = null;
+        scopeInitializers = null;
         return result;
     }
 

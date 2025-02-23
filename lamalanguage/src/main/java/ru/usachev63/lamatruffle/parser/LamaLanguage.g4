@@ -76,13 +76,32 @@ expression[attr]? { Expr body = null;
 
 definition
 :
+variableDefinition
+;
+
+variableDefinition
+:
 'var'
-LIDENT { factory.addVarDef($LIDENT); }
+variableDefinitionSequence
+';'
+;
+
+variableDefinitionSequence
+:
+variableDefinitionItem
 (
   ','
-  LIDENT { factory.addVarDef($LIDENT); }
+  variableDefinitionItem
 ) *
-';'
+;
+
+variableDefinitionItem
+:
+LIDENT ('=' basicExpression[Attr.VAL])? {
+  int frameSlot = factory.addVarDef($LIDENT);
+  if ($basicExpression.ctx != null)
+    factory.addVarInitializer(frameSlot, $basicExpression.result);
+}
 ;
 
 expression[Attr attr] returns [Expr result]
@@ -149,16 +168,12 @@ CHAR { $result = factory.createCharLiteral($CHAR); }
 varRef[Attr attr] returns [Expr result]
 :
 LIDENT {
-  if (attr == Attr.VOID)
-    $result = new Skip();
-  else {
-    LocalVarRef ref = factory.createLocalVarRef($LIDENT);
-    if (attr == Attr.REF)
-      $result = ref;
-    else
-      $result = factory.createVarRead(ref);
+  LocalVarRef ref = factory.createLocalVarRef($LIDENT);
+  if (attr == Attr.REF)
+    $result = ref;
+  else
+    $result = factory.createVarRead(ref);
   }
-}
 ;
 
 // lexer
