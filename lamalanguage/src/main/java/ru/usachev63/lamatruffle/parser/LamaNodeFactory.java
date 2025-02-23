@@ -8,7 +8,6 @@ import org.antlr.v4.runtime.Token;
 import ru.usachev63.lamatruffle.LamaLanguage;
 import ru.usachev63.lamatruffle.nodes.*;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -115,5 +114,22 @@ public class LamaNodeFactory {
                 return new Const((int)innerText.charAt(0));
             }
         }
+    }
+
+    public LocalVarRef createLocalVarRef(Token varNameToken) {
+        String varName = varNameToken.getText();
+        Integer frameSlot = lexicalScope.find(TruffleString.fromJavaStringUncached(varName, TruffleString.Encoding.US_ASCII));
+        if (frameSlot == null) {
+            throw new LamaParseError(source, varNameToken.getLine(), varNameToken.getCharPositionInLine(), 1, String.format("failed to resolve %s", varName));
+        }
+        return new LocalVarRef(frameSlot);
+    }
+
+    public Assn createAssn(Expr lhs, Expr rhs) {
+        return new Assn((LocalVarRef) lhs, rhs);
+    }
+
+    public VarRead createVarRead(LocalVarRef var) {
+        return new VarRead(var);
     }
 }

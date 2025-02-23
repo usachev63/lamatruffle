@@ -47,24 +47,31 @@ public static RootCallTarget parseLama(LamaLanguage language, Source source) {
     parser.lama();
     return parser.factory.getMain().getCallTarget();
 }
+
+private enum Attr {
+    VAL,
+    REF,
+    VOID,
+    WEAK,
+};
 }
 
 // parser
 
 lama
 :
-scopeExpr { factory.createMain($scopeExpr.result); }
+scopeExpr[Attr.VOID] { factory.createMain($scopeExpr.result); }
 EOF
 ;
 
-scopeExpr returns [ScopeExpr result]
+scopeExpr[Attr attr] returns [ScopeExpr result]
 : { factory.startScope(); }
 definition*
-expression? { Expr body = null;
-           if ($expression.ctx != null)
-             body = $expression.result;
-           $result = factory.finishScope(body);
-         }
+expression[attr]? { Expr body = null;
+                    if ($expression.ctx != null)
+                      body = $expression.result;
+                    $result = factory.finishScope(body);
+                  }
 ;
 
 definition
@@ -78,25 +85,50 @@ LIDENT { factory.addVarDef($LIDENT); }
 ';'
 ;
 
-expression returns [Expr result]
+expression[Attr attr] returns [Expr result]
 :
-primary { $result = $primary.result; }
-(
-  ';' expression { $result = new Seq($result, $expression.result); }
-)?
+basicExpression[attr] { $result = $basicExpression.result; }
+|
+basicExpression[Attr.VOID]
+';'
+expression[attr] { $result = new Seq($basicExpression.result, $expression.result); }
 ;
 
-primary returns [Expr result]
+basicExpression[Attr attr] returns [Expr result]
 :
-const_ { $result = $const_.result; }
+binaryExpression[attr] { $result = $binaryExpression.result; }
+;
+
+binaryExpression[Attr attr] returns [Expr result]
+:
+varRef[Attr.REF] ':=' binaryOperand[Attr.VAL] { $result = factory.createAssn($varRef.result, $binaryOperand.result); }
 |
-stringLiteral { $result = $stringLiteral.result; }
+binaryOperand[attr] { $result = $binaryOperand.result; }
+;
+
+binaryOperand[Attr attr] returns [Expr result]
+:
+postfixExpression[attr] { $result = $postfixExpression.result; }
+;
+
+postfixExpression[Attr attr] returns [Expr result]
+:
+primary[attr] { $result = $primary.result; }
+;
+
+primary[Attr attr] returns [Expr result]
+:
+{$attr != Attr.REF}? const_ { $result = $const_.result; }
 |
-charLiteral { $result = $charLiteral.result; }
+{$attr != Attr.REF}? stringLiteral { $result = $stringLiteral.result; }
 |
-'true' { $result = new Const(1); }
+{$attr != Attr.REF}? charLiteral { $result = $charLiteral.result; }
 |
-'false' { $result = new Const(0); }
+varRef[attr] { $result = $varRef.result; }
+|
+{$attr != Attr.REF}? 'true' { $result = new Const(1); }
+|
+{$attr != Attr.REF}? 'false' { $result = new Const(0); }
 ;
 
 const_ returns [Const result]
@@ -112,6 +144,21 @@ STRING { $result = factory.createStringLiteral($STRING); }
 charLiteral returns [Const result]
 :
 CHAR { $result = factory.createCharLiteral($CHAR); }
+;
+
+varRef[Attr attr] returns [Expr result]
+:
+LIDENT {
+  if (attr == Attr.VOID)
+    $result = new Skip();
+  else {
+    LocalVarRef ref = factory.createLocalVarRef($LIDENT);
+    if (attr == Attr.REF)
+      $result = ref;
+    else
+      $result = factory.createVarRead(ref);
+  }
+}
 ;
 
 // lexer
