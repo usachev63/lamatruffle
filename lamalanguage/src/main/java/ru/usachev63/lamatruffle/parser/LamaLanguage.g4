@@ -127,11 +127,23 @@ maybeAddSub[attr] { $result = $maybeAddSub.result; }
 
 maybeAddSub[Attr attr] returns [Expr result]
 :
+maybeMulDivRem[attr] { $result = $maybeMulDivRem.result; }
+|
+{$attr != Attr.REF}? maybeMulDivRem[Attr.VAL] { $result = $maybeMulDivRem.result; }
+(
+  op=('+' | '-') rhs=maybeMulDivRem[Attr.VAL] {
+    $result = factory.createBinary($op, $result, $rhs.result);
+  }
+)+
+;
+
+maybeMulDivRem[Attr attr] returns [Expr result]
+:
 binaryOperand[attr] { $result = $binaryOperand.result; }
 |
 {$attr != Attr.REF}? binaryOperand[Attr.VAL] { $result = $binaryOperand.result; }
 (
-  op=('+' | '-') rhs=binaryOperand[Attr.VAL] {
+  op=('*' | '/' | '%') rhs=binaryOperand[Attr.VAL] {
     $result = factory.createBinary($op, $result, $rhs.result);
   }
 )+

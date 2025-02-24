@@ -152,6 +152,9 @@ public class LamaNodeFactory {
         return switch (opToken.getText()) {
             case "+" -> AddNodeGen.create(lhs, rhs);
             case "-" -> SubNodeGen.create(lhs, rhs);
+            case "*" -> MulNodeGen.create(lhs, rhs);
+            case "/" -> DivNodeGen.create(lhs, rhs);
+            case "%" -> RemNodeGen.create(lhs, rhs);
             default -> throw new IllegalStateException();
         };
     }
