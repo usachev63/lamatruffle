@@ -115,14 +115,26 @@ expression[attr] { $result = new Seq($basicExpression.result, $expression.result
 
 basicExpression[Attr attr] returns [Expr result]
 :
-binaryExpression[attr] { $result = $binaryExpression.result; }
+maybeAssignment[attr] { $result = $maybeAssignment.result; }
 ;
 
-binaryExpression[Attr attr] returns [Expr result]
+maybeAssignment[Attr attr] returns [Expr result]
 :
-varRef[Attr.REF] ':=' binaryOperand[Attr.VAL] { $result = factory.createAssn($varRef.result, $binaryOperand.result); }
+{$attr != Attr.REF}? lhs=varRef[Attr.REF] ':=' rhs=maybeAssignment[Attr.VAL] { $result = factory.createAssn($lhs.result, $rhs.result); }
 |
+maybeAddSub[attr] { $result = $maybeAddSub.result; }
+;
+
+maybeAddSub[Attr attr] returns [Expr result]
+:
 binaryOperand[attr] { $result = $binaryOperand.result; }
+|
+{$attr != Attr.REF}? binaryOperand[Attr.VAL] { $result = $binaryOperand.result; }
+(
+  op=('+' | '-') rhs=binaryOperand[Attr.VAL] {
+    $result = factory.createBinary($op, $result, $rhs.result);
+  }
+)+
 ;
 
 binaryOperand[Attr attr] returns [Expr result]

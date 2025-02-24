@@ -147,4 +147,12 @@ public class LamaNodeFactory {
     public VarRead createVarRead(LocalVarRef var) {
         return new VarRead(var);
     }
+
+    public Expr createBinary(Token opToken, Expr lhs, Expr rhs) {
+        return switch (opToken.getText()) {
+            case "+" -> AddNodeGen.create(lhs, rhs);
+            case "-" -> SubNodeGen.create(lhs, rhs);
+            default -> throw new IllegalStateException();
+        };
+    }
 }

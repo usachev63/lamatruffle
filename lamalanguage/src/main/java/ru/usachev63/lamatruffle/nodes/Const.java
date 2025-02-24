@@ -13,4 +13,9 @@ public final class Const extends Expr {
     public Object executeGeneric(VirtualFrame frame) {
         return value;
     }
+
+    @Override
+    public long executeLong(VirtualFrame frame) {
+        return value;
+    }
 }
