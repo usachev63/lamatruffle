@@ -241,6 +241,9 @@ primary[Attr attr] returns [ExprNode result]
 |
   {$attr == Attr.VOID}?
   doWhileExpression { $result = $doWhileExpression.result; }
+|
+  {$attr == Attr.VOID}?
+  forExpression { $result = $forExpression.result; }
 ;
 
 const_ returns [LongLiteralNode result]
@@ -307,6 +310,21 @@ doWhileExpression returns [ExprNode result]
   'do' body=scopeExpr[Attr.VOID, false] 'while' cond=expression[Attr.VAL] 'od' {
     factory.popScope();
     $result = new SeqNode($body.result, factory.createWhile($cond.result, $body.result));
+  }
+;
+
+forExpression returns [ExprNode result]
+:
+  'for' init=scopeExpr[Attr.VOID, false] ',' cond=expression[Attr.VAL] ',' incr=expression[Attr.VOID]
+  'do' body=scopeExpr[Attr.VOID, true] 'od' {
+    factory.popScope();
+    $result = new SeqNode(
+      $init.result,
+      factory.createWhile(
+        $cond.result,
+        new SeqNode($body.result, $incr.result)
+      )
+    );
   }
 ;
 
