@@ -16,12 +16,7 @@ public class WriteBuiltinNode extends ExprNode {
     @Override
     public long executeLong(VirtualFrame frame) {
         var context = LamaContext.get(this);
-        long argument;
-        try {
-            argument = argumentNode.executeLong(frame);
-        } catch (UnexpectedResultException e) {
-            throw new RuntimeException("Expected long argument to write. " + e.getMessage());
-        }
+        long argument = argumentNode.executeLong(frame);
         context.getOutput().println(argument);
         return 0;
     }

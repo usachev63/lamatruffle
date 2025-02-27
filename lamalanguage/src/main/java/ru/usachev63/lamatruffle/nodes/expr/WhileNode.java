@@ -36,12 +36,7 @@ public class WhileNode extends ExprNode {
 
         @Override
         public boolean executeRepeating(VirtualFrame frame) {
-            boolean conditionValue;
-            try {
-                conditionValue = this.conditionNode.executeLong(frame) != 0;
-            } catch (UnexpectedResultException e) {
-                throw new RuntimeException(e);
-            }
+            boolean conditionValue = this.conditionNode.executeLong(frame) != 0;
             if (!conditionValue)
                 return false;
             this.bodyNode.executeGeneric(frame);

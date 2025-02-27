@@ -8,11 +8,6 @@ import org.antlr.v4.runtime.Token;
 import ru.usachev63.lamatruffle.LamaLanguage;
 import ru.usachev63.lamatruffle.nodes.*;
 import ru.usachev63.lamatruffle.nodes.expr.*;
-import ru.usachev63.lamatruffle.nodes.expr.AddNodeGen;
-import ru.usachev63.lamatruffle.nodes.expr.DivNodeGen;
-import ru.usachev63.lamatruffle.nodes.expr.MulNodeGen;
-import ru.usachev63.lamatruffle.nodes.expr.RemNodeGen;
-import ru.usachev63.lamatruffle.nodes.expr.SubNodeGen;
 import ru.usachev63.lamatruffle.nodes.expr.numeric.*;
 
 import java.util.*;
@@ -170,5 +165,15 @@ public class LamaNodeFactory {
 
     public ExprNode createWhile(ExprNode conditionNode, ExprNode bodyNode) {
         return new WhileNode(conditionNode, bodyNode);
+    }
+
+    public ExprNode createIf(List<LamaLanguageParser.IfThenEntry> ifThenEntries, ExprNode elseNode) {
+        ExprNode currentNode = elseNode;
+        Collections.reverse(ifThenEntries);
+        assert !ifThenEntries.isEmpty();
+        for (var ifThenEntry : ifThenEntries) {
+            currentNode = new IfNode(ifThenEntry.conditionNode, ifThenEntry.bodyNode, currentNode);
+        }
+        return currentNode;
     }
 }

@@ -51,12 +51,22 @@ public static RootCallTarget parseLama(LamaLanguage language, Source source) {
     return parser.factory.getMain().getCallTarget();
 }
 
-private enum Attr {
+private static enum Attr {
     VAL,
     REF,
     VOID,
     WEAK,
 };
+
+public static class IfThenEntry {
+  public ExprNode conditionNode;
+  public ExprNode bodyNode;
+  public IfThenEntry(ExprNode conditionNode, ExprNode bodyNode) {
+    this.conditionNode = conditionNode;
+    this.bodyNode = bodyNode;
+  }
+};
+
 }
 
 // parser
@@ -208,7 +218,10 @@ primary[Attr attr] returns [ExprNode result]
   'false' { $result = new LongLiteralNode(0); }
 |
   '(' scopeExpr[attr] ')' { $result = $scopeExpr.result; }
-| {$attr == Attr.VOID}?
+|
+  ifExpression[attr] { $result = $ifExpression.result; }
+|
+  {$attr == Attr.VOID}?
   whileDoExpression { $result = $whileDoExpression.result; }
 ;
 
@@ -236,6 +249,32 @@ LIDENT {
   else
     $result = factory.createVarRead(ref);
   }
+;
+
+ifExpression[Attr attr] returns [ExprNode result]
+:
+  {
+    List<IfThenEntry> ifThenEntries = new ArrayList<>();
+  }
+  'if' cond=expression[Attr.VAL] 'then' thenBody=expression[attr] {
+    ifThenEntries.add(new IfThenEntry($cond.result, $thenBody.result));
+  }
+  (
+    'elif' cond=expression[Attr.VAL] 'then' thenBody=expression[attr] {
+      ifThenEntries.add(new IfThenEntry($cond.result, $thenBody.result));
+    }
+  )*
+  elseBranch[attr] 'fi' {
+    $result = factory.createIf(ifThenEntries, $elseBranch.result);
+  }
+;
+
+elseBranch[Attr attr] returns [ExprNode result] // may be null
+:
+  'else' expression[attr] {
+    $result = $expression.result;
+  }
+| {$attr == Attr.VOID}? { $result = null; }
 ;
 
 whileDoExpression returns [ExprNode result]

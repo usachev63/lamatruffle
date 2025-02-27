@@ -11,7 +11,11 @@ import ru.usachev63.lamatruffle.LamaTypesGen;
 public abstract class ExprNode extends LamaNode {
     public abstract Object executeGeneric(VirtualFrame frame);
 
-    public long executeLong(VirtualFrame frame) throws UnexpectedResultException {
-        return LamaTypesGen.expectLong(executeGeneric(frame));
+    public long executeLong(VirtualFrame frame) {
+        try {
+            return LamaTypesGen.expectLong(executeGeneric(frame));
+        } catch (UnexpectedResultException e) {
+            throw new RuntimeException(e);
+        }
     }
 }
