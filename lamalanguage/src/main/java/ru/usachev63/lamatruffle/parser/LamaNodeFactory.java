@@ -9,10 +9,7 @@ import ru.usachev63.lamatruffle.LamaLanguage;
 import ru.usachev63.lamatruffle.nodes.*;
 import ru.usachev63.lamatruffle.nodes.expr.*;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class LamaNodeFactory {
     public LamaNodeFactory(LamaLanguage language, Source source) {
@@ -81,7 +78,8 @@ public class LamaNodeFactory {
     public ScopeExprNode finishScope(ExprNode body) {
         if (body == null)
             body = new SkipNode();
-        for (AssnNode init : scopeInitializers.reversed()) {
+        Collections.reverse(scopeInitializers);
+        for (AssnNode init : scopeInitializers) {
             body = new SeqNode(init, body);
         }
         ScopeExprNode result = new ScopeExprNode(null, body);

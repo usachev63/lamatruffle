@@ -85,5 +85,4 @@ else
     done
 fi
 
-set -x
 "$JAVA_HOME/bin/java" "${JAVA_ARGS[@]}" -p "${DIR}/modules" -m @@launcherClass@@ "${PROGRAM_ARGS[@]}"

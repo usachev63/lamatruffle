@@ -82,7 +82,7 @@ public final class LamaMain {
             source = Source.newBuilder(LAMA, new InputStreamReader(System.in), "<stdin>").interactive(!launcherOutput).build();
             // @formatter:on
         } else {
-            source = Source.newBuilder(LAMA, new File(file)).interactive(!launcherOutput).build();
+            source = Source.newBuilder(LAMA, new File(file)).interactive(false).build();
         }
 
         System.exit(executeSource(source, System.in, System.out, options, launcherOutput));
@@ -104,10 +104,10 @@ public final class LamaMain {
 
         try {
             Value result = context.eval(source);
-            if (launcherOutput && !result.isNull()) {
-                out.println("Result of the program is:");
-                out.println(result.toString());
-            }
+//            if (launcherOutput && !result.isNull()) {
+//                out.println("Result of the program is:");
+//                out.println(result.toString());
+//            }
             return 0;
         } catch (PolyglotException ex) {
             if (ex.isInternalError()) {
