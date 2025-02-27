@@ -31,11 +31,12 @@ public class LamaNodeFactory {
     /* State while parsing a function. */
     private FrameDescriptor.Builder frameDescriptorBuilder = FrameDescriptor.newBuilder();
 
-    static class LexicalScope {
-        protected final LexicalScope outer;
+    static class Scope {
+        protected final Scope outer;
+        private final List<AssnNode> initializers = new ArrayList<>();
         protected final Map<TruffleString, Integer> locals = new HashMap<>();
 
-        LexicalScope(LexicalScope outer) {
+        Scope(Scope outer) {
             this.outer = outer;
         }
 
@@ -53,38 +54,35 @@ public class LamaNodeFactory {
 
     /* parsing scope begin */
 
-    private LexicalScope lexicalScope;
-    private List<AssnNode> scopeInitializers;
+    private Scope currentScope = null;
 
     public void startScope() {
-        lexicalScope = new LexicalScope(lexicalScope);
-        scopeInitializers = new ArrayList<>();
+        currentScope = new Scope(currentScope);
     }
 
     public int addVarDef(Token varNameToken) {
         TruffleString name = TruffleString.fromJavaStringUncached(varNameToken.getText(), TruffleString.Encoding.US_ASCII);
-        if (lexicalScope.find(name) != null) {
+        if (currentScope.find(name) != null) {
             throw new LamaParseError(source, varNameToken.getLine(), varNameToken.getCharPositionInLine(), 1, String.format("cannot redefine %s", name));
         }
         int slot = frameDescriptorBuilder.addSlot(FrameSlotKind.Illegal, name, null);
-        lexicalScope.locals.put(name, slot);
+        currentScope.locals.put(name, slot);
         return slot;
     }
 
     public void addVarInitializer(int frameSlot, ExprNode value) {
-        scopeInitializers.add(new AssnNode(new LocalVarRefNode(frameSlot), value));
+        currentScope.initializers.add(new AssnNode(new LocalVarRefNode(frameSlot), value));
     }
 
     public ScopeExprNode finishScope(ExprNode body) {
         if (body == null)
             body = new SkipNode();
-        Collections.reverse(scopeInitializers);
-        for (AssnNode init : scopeInitializers) {
+        Collections.reverse(currentScope.initializers);
+        for (AssnNode init : currentScope.initializers) {
             body = new SeqNode(init, body);
         }
         ScopeExprNode result = new ScopeExprNode(null, body);
-        lexicalScope = null;
-        scopeInitializers = null;
+        currentScope = currentScope.outer;
         return result;
     }
 
@@ -132,7 +130,7 @@ public class LamaNodeFactory {
 
     public LocalVarRefNode createLocalVarRef(Token varNameToken) {
         String varName = varNameToken.getText();
-        Integer frameSlot = lexicalScope.find(TruffleString.fromJavaStringUncached(varName, TruffleString.Encoding.US_ASCII));
+        Integer frameSlot = currentScope.find(TruffleString.fromJavaStringUncached(varName, TruffleString.Encoding.US_ASCII));
         if (frameSlot == null) {
             throw new LamaParseError(source, varNameToken.getLine(), varNameToken.getCharPositionInLine(), 1, String.format("failed to resolve %s", varName));
         }

@@ -171,17 +171,24 @@ postfixExpression[Attr attr] returns [ExprNode result]
 
 primary[Attr attr] returns [ExprNode result]
 :
-{$attr != Attr.REF}? const_ { $result = $const_.result; }
+  {$attr != Attr.REF}?
+  const_ { $result = $const_.result; }
 |
-{$attr != Attr.REF}? stringLiteral { $result = $stringLiteral.result; }
+  {$attr != Attr.REF}?
+  stringLiteral { $result = $stringLiteral.result; }
 |
-{$attr != Attr.REF}? charLiteral { $result = $charLiteral.result; }
+  {$attr != Attr.REF}?
+  charLiteral { $result = $charLiteral.result; }
 |
-varRef[attr] { $result = $varRef.result; }
+  varRef[attr] { $result = $varRef.result; }
 |
-{$attr != Attr.REF}? 'true' { $result = new LongLiteralNode(1); }
+  {$attr != Attr.REF}?
+  'true' { $result = new LongLiteralNode(1); }
 |
-{$attr != Attr.REF}? 'false' { $result = new LongLiteralNode(0); }
+  {$attr != Attr.REF}?
+  'false' { $result = new LongLiteralNode(0); }
+|
+  '(' scopeExpr[attr] ')' { $result = $scopeExpr.result; }
 ;
 
 const_ returns [LongLiteralNode result]
