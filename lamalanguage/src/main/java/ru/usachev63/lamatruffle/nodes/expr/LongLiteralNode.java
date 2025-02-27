@@ -1,11 +1,11 @@
-package ru.usachev63.lamatruffle.nodes;
+package ru.usachev63.lamatruffle.nodes.expr;
 
 import com.oracle.truffle.api.frame.VirtualFrame;
 
-public final class Const extends Expr {
+public final class LongLiteralNode extends ExprNode {
     private final long value;
 
-    public Const(long value) {
+    public LongLiteralNode(long value) {
         this.value = value;
     }
 

@@ -11,6 +11,7 @@ import com.oracle.truffle.api.*;
 import com.oracle.truffle.api.source.*;
 import ru.usachev63.lamatruffle.*;
 import ru.usachev63.lamatruffle.nodes.*;
+import ru.usachev63.lamatruffle.nodes.expr.*;
 }
 
 @parser::members
@@ -64,10 +65,10 @@ scopeExpr[Attr.VOID] { factory.createMain($scopeExpr.result); }
 EOF
 ;
 
-scopeExpr[Attr attr] returns [ScopeExpr result]
+scopeExpr[Attr attr] returns [ScopeExprNode result]
 : { factory.startScope(); }
 definition*
-expression[attr]? { Expr body = null;
+expression[attr]? { ExprNode body = null;
                     if ($expression.ctx != null)
                       body = $expression.result;
                     $result = factory.finishScope(body);
@@ -104,28 +105,28 @@ LIDENT ('=' basicExpression[Attr.VAL])? {
 }
 ;
 
-expression[Attr attr] returns [Expr result]
+expression[Attr attr] returns [ExprNode result]
 :
 basicExpression[attr] { $result = $basicExpression.result; }
 |
 basicExpression[Attr.VOID]
 ';'
-expression[attr] { $result = new Seq($basicExpression.result, $expression.result); }
+expression[attr] { $result = new SeqNode($basicExpression.result, $expression.result); }
 ;
 
-basicExpression[Attr attr] returns [Expr result]
+basicExpression[Attr attr] returns [ExprNode result]
 :
 maybeAssignment[attr] { $result = $maybeAssignment.result; }
 ;
 
-maybeAssignment[Attr attr] returns [Expr result]
+maybeAssignment[Attr attr] returns [ExprNode result]
 :
 {$attr != Attr.REF}? lhs=varRef[Attr.REF] ':=' rhs=maybeAssignment[Attr.VAL] { $result = factory.createAssn($lhs.result, $rhs.result); }
 |
 maybeAddSub[attr] { $result = $maybeAddSub.result; }
 ;
 
-maybeAddSub[Attr attr] returns [Expr result]
+maybeAddSub[Attr attr] returns [ExprNode result]
 :
 maybeMulDivRem[attr] { $result = $maybeMulDivRem.result; }
 |
@@ -137,7 +138,7 @@ maybeMulDivRem[attr] { $result = $maybeMulDivRem.result; }
 )+
 ;
 
-maybeMulDivRem[Attr attr] returns [Expr result]
+maybeMulDivRem[Attr attr] returns [ExprNode result]
 :
 binaryOperand[attr] { $result = $binaryOperand.result; }
 |
@@ -149,17 +150,17 @@ binaryOperand[attr] { $result = $binaryOperand.result; }
 )+
 ;
 
-binaryOperand[Attr attr] returns [Expr result]
+binaryOperand[Attr attr] returns [ExprNode result]
 :
 postfixExpression[attr] { $result = $postfixExpression.result; }
 ;
 
-postfixExpression[Attr attr] returns [Expr result]
+postfixExpression[Attr attr] returns [ExprNode result]
 :
 primary[attr] { $result = $primary.result; }
 ;
 
-primary[Attr attr] returns [Expr result]
+primary[Attr attr] returns [ExprNode result]
 :
 {$attr != Attr.REF}? const_ { $result = $const_.result; }
 |
@@ -169,30 +170,30 @@ primary[Attr attr] returns [Expr result]
 |
 varRef[attr] { $result = $varRef.result; }
 |
-{$attr != Attr.REF}? 'true' { $result = new Const(1); }
+{$attr != Attr.REF}? 'true' { $result = new LongLiteralNode(1); }
 |
-{$attr != Attr.REF}? 'false' { $result = new Const(0); }
+{$attr != Attr.REF}? 'false' { $result = new LongLiteralNode(0); }
 ;
 
-const_ returns [Const result]
+const_ returns [LongLiteralNode result]
 :
 DECIMAL { $result = factory.createConst($DECIMAL); }
 ;
 
-stringLiteral returns [StringLiteral result]
+stringLiteral returns [StringLiteralNode result]
 :
 STRING { $result = factory.createStringLiteral($STRING); }
 ;
 
-charLiteral returns [Const result]
+charLiteral returns [LongLiteralNode result]
 :
 CHAR { $result = factory.createCharLiteral($CHAR); }
 ;
 
-varRef[Attr attr] returns [Expr result]
+varRef[Attr attr] returns [ExprNode result]
 :
 LIDENT {
-  LocalVarRef ref = factory.createLocalVarRef($LIDENT);
+  LocalVarRefNode ref = factory.createLocalVarRef($LIDENT);
   if (attr == Attr.REF)
     $result = ref;
   else

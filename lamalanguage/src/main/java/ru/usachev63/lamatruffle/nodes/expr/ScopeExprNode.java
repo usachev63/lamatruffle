@@ -1,12 +1,13 @@
-package ru.usachev63.lamatruffle.nodes;
+package ru.usachev63.lamatruffle.nodes.expr;
 
 import com.oracle.truffle.api.frame.VirtualFrame;
+import ru.usachev63.lamatruffle.nodes.DefNode;
 
-public final class ScopeExpr extends Expr {
-    private final Def[] defs;
-    @Child private Expr body;
+public final class ScopeExprNode extends ExprNode {
+    private final DefNode[] defs;
+    @Child private ExprNode body;
 
-    public ScopeExpr(Def[] defs, Expr body) {
+    public ScopeExprNode(DefNode[] defs, ExprNode body) {
         this.defs = defs;
         this.body = body;
     }

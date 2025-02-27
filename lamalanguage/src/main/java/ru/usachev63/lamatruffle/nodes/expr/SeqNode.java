@@ -1,12 +1,14 @@
-package ru.usachev63.lamatruffle.nodes;
+package ru.usachev63.lamatruffle.nodes.expr;
 
 import com.oracle.truffle.api.frame.VirtualFrame;
 
-public final class Seq extends Expr {
-    @Child Expr first;
-    @Child Expr second;
+public final class SeqNode extends ExprNode {
+    @Child
+    ExprNode first;
+    @Child
+    ExprNode second;
 
-    public Seq(Expr first, Expr second){
+    public SeqNode(ExprNode first, ExprNode second){
         this.first=first;
         this.second=second;
     }

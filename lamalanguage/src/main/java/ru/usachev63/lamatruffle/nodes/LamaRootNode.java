@@ -46,12 +46,14 @@ import com.oracle.truffle.api.nodes.*;
 import com.oracle.truffle.api.source.SourceSection;
 import com.oracle.truffle.api.strings.TruffleString;
 import ru.usachev63.lamatruffle.LamaLanguage;
+import ru.usachev63.lamatruffle.nodes.expr.ExprNode;
+import ru.usachev63.lamatruffle.nodes.expr.ScopeExprNode;
 
 
 @NodeInfo(language = "lama")
 public class LamaRootNode extends RootNode {
     /** The function body that is executed, and specialized during execution. */
-    @Child private ScopeExpr bodyNode;
+    @Child private ScopeExprNode bodyNode;
 
     /** The name of the function, for printing purposes only. */
     private final TruffleString name;
@@ -62,7 +64,7 @@ public class LamaRootNode extends RootNode {
 
 //    @CompilerDirectives.CompilationFinal(dimensions = 1) private volatile SLWriteLocalVariableNode[] argumentNodesCache;
 
-    public LamaRootNode(LamaLanguage language, FrameDescriptor frameDescriptor, ScopeExpr bodyNode, SourceSection sourceSection, TruffleString name) {
+    public LamaRootNode(LamaLanguage language, FrameDescriptor frameDescriptor, ScopeExprNode bodyNode, SourceSection sourceSection, TruffleString name) {
         super(language, frameDescriptor);
         this.bodyNode = bodyNode;
         this.name = name;
@@ -80,7 +82,7 @@ public class LamaRootNode extends RootNode {
         return bodyNode.executeGeneric(frame);
     }
 
-    public Expr getBodyNode() {
+    public ExprNode getBodyNode() {
         return bodyNode;
     }
 

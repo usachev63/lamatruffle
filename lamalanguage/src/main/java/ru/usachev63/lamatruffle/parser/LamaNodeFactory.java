@@ -7,6 +7,7 @@ import com.oracle.truffle.api.strings.TruffleString;
 import org.antlr.v4.runtime.Token;
 import ru.usachev63.lamatruffle.LamaLanguage;
 import ru.usachev63.lamatruffle.nodes.*;
+import ru.usachev63.lamatruffle.nodes.expr.*;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -21,7 +22,7 @@ public class LamaNodeFactory {
 
     public LamaRootNode getMain() {return main;}
 
-    public void createMain(ScopeExpr body) {
+    public void createMain(ScopeExprNode body) {
         this.main = new LamaRootNode(language, frameDescriptorBuilder.build(), body, null, TruffleString.fromJavaStringUncached("main", TruffleString.Encoding.UTF_8));
         frameDescriptorBuilder = null;
     }
@@ -56,7 +57,7 @@ public class LamaNodeFactory {
     /* parsing scope begin */
 
     private LexicalScope lexicalScope;
-    private List<Assn> scopeInitializers;
+    private List<AssnNode> scopeInitializers;
 
     public void startScope() {
         lexicalScope = new LexicalScope(lexicalScope);
@@ -73,17 +74,17 @@ public class LamaNodeFactory {
         return slot;
     }
 
-    public void addVarInitializer(int frameSlot, Expr value) {
-        scopeInitializers.add(new Assn(new LocalVarRef(frameSlot), value));
+    public void addVarInitializer(int frameSlot, ExprNode value) {
+        scopeInitializers.add(new AssnNode(new LocalVarRefNode(frameSlot), value));
     }
 
-    public ScopeExpr finishScope(Expr body) {
+    public ScopeExprNode finishScope(ExprNode body) {
         if (body == null)
-            body = new Skip();
-        for (Assn init : scopeInitializers.reversed()) {
-            body = new Seq(init, body);
+            body = new SkipNode();
+        for (AssnNode init : scopeInitializers.reversed()) {
+            body = new SeqNode(init, body);
         }
-        ScopeExpr result = new ScopeExpr(null, body);
+        ScopeExprNode result = new ScopeExprNode(null, body);
         lexicalScope = null;
         scopeInitializers = null;
         return result;
@@ -91,16 +92,16 @@ public class LamaNodeFactory {
 
     /* parsing scope end */
 
-    public Const createConst(Token literalToken) {
+    public LongLiteralNode createConst(Token literalToken) {
         try {
-            return new Const(Long.parseLong(literalToken.getText()));
+            return new LongLiteralNode(Long.parseLong(literalToken.getText()));
         } catch (NumberFormatException e) {
             return null;
         }
     }
 
-    public StringLiteral createStringLiteral(Token literalToken) {
-        return new StringLiteral(TruffleString.fromJavaStringUncached(stringLiteralValueOf(literalToken.getText()), TruffleString.Encoding.US_ASCII));
+    public StringLiteralNode createStringLiteral(Token literalToken) {
+        return new StringLiteralNode(TruffleString.fromJavaStringUncached(stringLiteralValueOf(literalToken.getText()), TruffleString.Encoding.US_ASCII));
     }
 
     private String stringLiteralValueOf(String rawText) {
@@ -108,7 +109,7 @@ public class LamaNodeFactory {
         return rawText.substring(1, rawText.length() - 1).replaceAll("\"\"", "\"");
     }
 
-    public Const createCharLiteral(Token literalToken) {
+    public LongLiteralNode createCharLiteral(Token literalToken) {
         String tokenText = literalToken.getText();
         assert tokenText.length() >= 3;
         assert tokenText.charAt(0) == '\'';
@@ -116,39 +117,39 @@ public class LamaNodeFactory {
         String innerText = tokenText.substring(1, tokenText.length() - 1);
         switch (innerText) {
             case "''" -> {
-                return new Const((int) '\'');
+                return new LongLiteralNode((int) '\'');
             }
             case "\\n" -> {
-                return new Const((int) '\n');
+                return new LongLiteralNode((int) '\n');
             }
             case "\\t" -> {
-                return new Const((int) '\t');
+                return new LongLiteralNode((int) '\t');
             }
             default -> {
                 assert innerText.length() == 1;
-                return new Const((int)innerText.charAt(0));
+                return new LongLiteralNode((int)innerText.charAt(0));
             }
         }
     }
 
-    public LocalVarRef createLocalVarRef(Token varNameToken) {
+    public LocalVarRefNode createLocalVarRef(Token varNameToken) {
         String varName = varNameToken.getText();
         Integer frameSlot = lexicalScope.find(TruffleString.fromJavaStringUncached(varName, TruffleString.Encoding.US_ASCII));
         if (frameSlot == null) {
             throw new LamaParseError(source, varNameToken.getLine(), varNameToken.getCharPositionInLine(), 1, String.format("failed to resolve %s", varName));
         }
-        return new LocalVarRef(frameSlot);
+        return new LocalVarRefNode(frameSlot);
     }
 
-    public Assn createAssn(Expr lhs, Expr rhs) {
-        return new Assn((LocalVarRef) lhs, rhs);
+    public AssnNode createAssn(ExprNode lhs, ExprNode rhs) {
+        return new AssnNode((LocalVarRefNode) lhs, rhs);
     }
 
-    public VarRead createVarRead(LocalVarRef var) {
-        return new VarRead(var);
+    public VarReadNode createVarRead(LocalVarRefNode var) {
+        return new VarReadNode(var);
     }
 
-    public Expr createBinary(Token opToken, Expr lhs, Expr rhs) {
+    public ExprNode createBinary(Token opToken, ExprNode lhs, ExprNode rhs) {
         return switch (opToken.getText()) {
             case "+" -> AddNodeGen.create(lhs, rhs);
             case "-" -> SubNodeGen.create(lhs, rhs);

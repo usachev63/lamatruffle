@@ -1,4 +1,4 @@
-package ru.usachev63.lamatruffle.nodes;
+package ru.usachev63.lamatruffle;
 
 import com.oracle.truffle.api.dsl.TypeSystem;
 

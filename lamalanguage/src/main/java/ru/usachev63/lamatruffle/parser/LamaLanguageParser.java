@@ -10,6 +10,7 @@ import com.oracle.truffle.api.*;
 import com.oracle.truffle.api.source.*;
 import ru.usachev63.lamatruffle.*;
 import ru.usachev63.lamatruffle.nodes.*;
+import ru.usachev63.lamatruffle.nodes.expr.*;
 
 import org.antlr.v4.runtime.atn.*;
 import org.antlr.v4.runtime.dfa.DFA;
@@ -194,7 +195,7 @@ public class LamaLanguageParser extends Parser {
 	@SuppressWarnings("CheckReturnValue")
 	public static class ScopeExprContext extends ParserRuleContext {
 		public Attr attr;
-		public ScopeExpr result;
+		public ScopeExprNode result;
 		public ExpressionContext expression;
 		public List<DefinitionContext> definition() {
 			return getRuleContexts(DefinitionContext.class);
@@ -247,7 +248,7 @@ public class LamaLanguageParser extends Parser {
 				}
 				break;
 			}
-			 Expr body = null;
+			 ExprNode body = null;
 			                    if (((ScopeExprContext)_localctx).expression != null)
 			                      body = ((ScopeExprContext)_localctx).expression.result;
 			                    ((ScopeExprContext)_localctx).result =  factory.finishScope(body);
@@ -441,7 +442,7 @@ public class LamaLanguageParser extends Parser {
 	@SuppressWarnings("CheckReturnValue")
 	public static class ExpressionContext extends ParserRuleContext {
 		public Attr attr;
-		public Expr result;
+		public ExprNode result;
 		public BasicExpressionContext basicExpression;
 		public ExpressionContext expression;
 		public BasicExpressionContext basicExpression() {
@@ -482,7 +483,7 @@ public class LamaLanguageParser extends Parser {
 				match(T__1);
 				setState(78);
 				((ExpressionContext)_localctx).expression = expression(attr);
-				 ((ExpressionContext)_localctx).result =  new Seq(((ExpressionContext)_localctx).basicExpression.result, ((ExpressionContext)_localctx).expression.result); 
+				 ((ExpressionContext)_localctx).result =  new SeqNode(((ExpressionContext)_localctx).basicExpression.result, ((ExpressionContext)_localctx).expression.result); 
 				}
 				break;
 			}
@@ -501,7 +502,7 @@ public class LamaLanguageParser extends Parser {
 	@SuppressWarnings("CheckReturnValue")
 	public static class BasicExpressionContext extends ParserRuleContext {
 		public Attr attr;
-		public Expr result;
+		public ExprNode result;
 		public MaybeAssignmentContext maybeAssignment;
 		public MaybeAssignmentContext maybeAssignment() {
 			return getRuleContext(MaybeAssignmentContext.class,0);
@@ -539,7 +540,7 @@ public class LamaLanguageParser extends Parser {
 	@SuppressWarnings("CheckReturnValue")
 	public static class MaybeAssignmentContext extends ParserRuleContext {
 		public Attr attr;
-		public Expr result;
+		public ExprNode result;
 		public VarRefContext lhs;
 		public MaybeAssignmentContext rhs;
 		public MaybeAddSubContext maybeAddSub;
@@ -605,7 +606,7 @@ public class LamaLanguageParser extends Parser {
 	@SuppressWarnings("CheckReturnValue")
 	public static class MaybeAddSubContext extends ParserRuleContext {
 		public Attr attr;
-		public Expr result;
+		public ExprNode result;
 		public MaybeMulDivRemContext maybeMulDivRem;
 		public Token op;
 		public MaybeMulDivRemContext rhs;
@@ -693,7 +694,7 @@ public class LamaLanguageParser extends Parser {
 	@SuppressWarnings("CheckReturnValue")
 	public static class MaybeMulDivRemContext extends ParserRuleContext {
 		public Attr attr;
-		public Expr result;
+		public ExprNode result;
 		public BinaryOperandContext binaryOperand;
 		public Token op;
 		public BinaryOperandContext rhs;
@@ -781,7 +782,7 @@ public class LamaLanguageParser extends Parser {
 	@SuppressWarnings("CheckReturnValue")
 	public static class BinaryOperandContext extends ParserRuleContext {
 		public Attr attr;
-		public Expr result;
+		public ExprNode result;
 		public PostfixExpressionContext postfixExpression;
 		public PostfixExpressionContext postfixExpression() {
 			return getRuleContext(PostfixExpressionContext.class,0);
@@ -819,7 +820,7 @@ public class LamaLanguageParser extends Parser {
 	@SuppressWarnings("CheckReturnValue")
 	public static class PostfixExpressionContext extends ParserRuleContext {
 		public Attr attr;
-		public Expr result;
+		public ExprNode result;
 		public PrimaryContext primary;
 		public PrimaryContext primary() {
 			return getRuleContext(PrimaryContext.class,0);
@@ -857,7 +858,7 @@ public class LamaLanguageParser extends Parser {
 	@SuppressWarnings("CheckReturnValue")
 	public static class PrimaryContext extends ParserRuleContext {
 		public Attr attr;
-		public Expr result;
+		public ExprNode result;
 		public Const_Context const_;
 		public StringLiteralContext stringLiteral;
 		public CharLiteralContext charLiteral;
@@ -934,7 +935,7 @@ public class LamaLanguageParser extends Parser {
 				if (!(_localctx.attr != Attr.REF)) throw new FailedPredicateException(this, "$attr != Attr.REF");
 				setState(151);
 				match(T__10);
-				 ((PrimaryContext)_localctx).result =  new Const(1); 
+				 ((PrimaryContext)_localctx).result =  new LongLiteralNode(1); 
 				}
 				break;
 			case 6:
@@ -944,7 +945,7 @@ public class LamaLanguageParser extends Parser {
 				if (!(_localctx.attr != Attr.REF)) throw new FailedPredicateException(this, "$attr != Attr.REF");
 				setState(154);
 				match(T__11);
-				 ((PrimaryContext)_localctx).result =  new Const(0); 
+				 ((PrimaryContext)_localctx).result =  new LongLiteralNode(0); 
 				}
 				break;
 			}
@@ -962,7 +963,7 @@ public class LamaLanguageParser extends Parser {
 
 	@SuppressWarnings("CheckReturnValue")
 	public static class Const_Context extends ParserRuleContext {
-		public Const result;
+		public LongLiteralNode result;
 		public Token DECIMAL;
 		public TerminalNode DECIMAL() { return getToken(LamaLanguageParser.DECIMAL, 0); }
 		public Const_Context(ParserRuleContext parent, int invokingState) {
@@ -995,7 +996,7 @@ public class LamaLanguageParser extends Parser {
 
 	@SuppressWarnings("CheckReturnValue")
 	public static class StringLiteralContext extends ParserRuleContext {
-		public StringLiteral result;
+		public StringLiteralNode result;
 		public Token STRING;
 		public TerminalNode STRING() { return getToken(LamaLanguageParser.STRING, 0); }
 		public StringLiteralContext(ParserRuleContext parent, int invokingState) {
@@ -1028,7 +1029,7 @@ public class LamaLanguageParser extends Parser {
 
 	@SuppressWarnings("CheckReturnValue")
 	public static class CharLiteralContext extends ParserRuleContext {
-		public Const result;
+		public LongLiteralNode result;
 		public Token CHAR;
 		public TerminalNode CHAR() { return getToken(LamaLanguageParser.CHAR, 0); }
 		public CharLiteralContext(ParserRuleContext parent, int invokingState) {
@@ -1062,7 +1063,7 @@ public class LamaLanguageParser extends Parser {
 	@SuppressWarnings("CheckReturnValue")
 	public static class VarRefContext extends ParserRuleContext {
 		public Attr attr;
-		public Expr result;
+		public ExprNode result;
 		public Token LIDENT;
 		public TerminalNode LIDENT() { return getToken(LamaLanguageParser.LIDENT, 0); }
 		public VarRefContext(ParserRuleContext parent, int invokingState) { super(parent, invokingState); }
@@ -1082,7 +1083,7 @@ public class LamaLanguageParser extends Parser {
 			setState(167);
 			((VarRefContext)_localctx).LIDENT = match(LIDENT);
 
-			  LocalVarRef ref = factory.createLocalVarRef(((VarRefContext)_localctx).LIDENT);
+			  LocalVarRefNode ref = factory.createLocalVarRef(((VarRefContext)_localctx).LIDENT);
 			  if (attr == Attr.REF)
 			    ((VarRefContext)_localctx).result =  ref;
 			  else

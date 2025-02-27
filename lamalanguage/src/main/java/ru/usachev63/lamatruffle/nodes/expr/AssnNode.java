@@ -1,14 +1,15 @@
-package ru.usachev63.lamatruffle.nodes;
+package ru.usachev63.lamatruffle.nodes.expr;
 
 import com.oracle.truffle.api.frame.VirtualFrame;
+import ru.usachev63.lamatruffle.nodes.LocalVarRefNode;
 
-public final class Assn extends Expr {
+public final class AssnNode extends ExprNode {
     @Child
-    LocalVarRef lhs;
+    LocalVarRefNode lhs;
     @Child
-    Expr rhs;
+    ExprNode rhs;
 
-    public Assn(LocalVarRef lhs, Expr rhs) {
+    public AssnNode(LocalVarRefNode lhs, ExprNode rhs) {
         this.lhs = lhs;
         this.rhs = rhs;
     }
