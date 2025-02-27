@@ -75,7 +75,7 @@ public class LamaNodeFactory {
         currentScope.initializers.add(new AssnNode(new LocalVarRefNode(frameSlot), value));
     }
 
-    public ScopeExprNode finishScope(ExprNode body) {
+    public ScopeExprNode finishScope(ExprNode body, boolean popScope) {
         if (body == null)
             body = new SkipNode();
         Collections.reverse(currentScope.initializers);
@@ -83,8 +83,14 @@ public class LamaNodeFactory {
             body = new SeqNode(init, body);
         }
         ScopeExprNode result = new ScopeExprNode(null, body);
-        currentScope = currentScope.outer;
+        if (popScope)
+          popScope();
         return result;
+    }
+
+    public void popScope() {
+        assert currentScope != null;
+        currentScope = currentScope.outer;
     }
 
     /* parsing scope end */

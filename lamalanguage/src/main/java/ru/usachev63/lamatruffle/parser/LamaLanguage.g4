@@ -73,17 +73,17 @@ public static class IfThenEntry {
 
 lama
 :
-scopeExpr[Attr.VOID] { factory.createMain($scopeExpr.result); }
+scopeExpr[Attr.VOID, true] { factory.createMain($scopeExpr.result); }
 EOF
 ;
 
-scopeExpr[Attr attr] returns [ScopeExprNode result]
+scopeExpr[Attr attr, boolean popScope] returns [ScopeExprNode result]
 : { factory.startScope(); }
 definition*
 expression[attr]? { ExprNode body = null;
                     if ($expression.ctx != null)
                       body = $expression.result;
-                    $result = factory.finishScope(body);
+                    $result = factory.finishScope(body, popScope);
                   }
 ;
 
@@ -217,12 +217,15 @@ primary[Attr attr] returns [ExprNode result]
   {$attr != Attr.REF}?
   'false' { $result = new LongLiteralNode(0); }
 |
-  '(' scopeExpr[attr] ')' { $result = $scopeExpr.result; }
+  '(' scopeExpr[attr, true] ')' { $result = $scopeExpr.result; }
 |
   ifExpression[attr] { $result = $ifExpression.result; }
 |
   {$attr == Attr.VOID}?
   whileDoExpression { $result = $whileDoExpression.result; }
+|
+  {$attr == Attr.VOID}?
+  doWhileExpression { $result = $doWhileExpression.result; }
 ;
 
 const_ returns [LongLiteralNode result]
@@ -279,8 +282,16 @@ elseBranch[Attr attr] returns [ExprNode result] // may be null
 
 whileDoExpression returns [ExprNode result]
 :
-  'while' cond=expression[Attr.VAL] 'do' body=scopeExpr[Attr.VOID] 'od' {
+  'while' cond=expression[Attr.VAL] 'do' body=scopeExpr[Attr.VOID, true] 'od' {
     $result = factory.createWhile($cond.result, $body.result);
+  }
+;
+
+doWhileExpression returns [ExprNode result]
+:
+  'do' body=scopeExpr[Attr.VOID, false] 'while' cond=expression[Attr.VAL] 'od' {
+    factory.popScope();
+    $result = new SeqNode($body.result, factory.createWhile($cond.result, $body.result));
   }
 ;
 
