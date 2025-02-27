@@ -167,4 +167,8 @@ public class LamaNodeFactory {
             default -> throw new IllegalStateException();
         };
     }
+
+    public ExprNode createWhile(ExprNode conditionNode, ExprNode bodyNode) {
+        return new WhileNode(conditionNode, bodyNode);
+    }
 }

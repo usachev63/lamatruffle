@@ -208,6 +208,8 @@ primary[Attr attr] returns [ExprNode result]
   'false' { $result = new LongLiteralNode(0); }
 |
   '(' scopeExpr[attr] ')' { $result = $scopeExpr.result; }
+| {$attr == Attr.VOID}?
+  whileDoExpression { $result = $whileDoExpression.result; }
 ;
 
 const_ returns [LongLiteralNode result]
@@ -233,6 +235,13 @@ LIDENT {
     $result = ref;
   else
     $result = factory.createVarRead(ref);
+  }
+;
+
+whileDoExpression returns [ExprNode result]
+:
+  'while' cond=expression[Attr.VAL] 'do' body=scopeExpr[Attr.VOID] 'od' {
+    $result = factory.createWhile($cond.result, $body.result);
   }
 ;
 
