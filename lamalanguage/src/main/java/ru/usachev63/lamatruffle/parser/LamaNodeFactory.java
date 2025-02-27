@@ -154,6 +154,7 @@ public class LamaNodeFactory {
 
     public ExprNode createBinary(Token opToken, ExprNode lhs, ExprNode rhs) {
         return switch (opToken.getText()) {
+            case "&&" -> ConjunctionNodeGen.create(lhs, rhs);
             case "==" -> EqNodeGen.create(lhs, rhs);
             case "!=" -> NeqNodeGen.create(lhs, rhs);
             case "<=" -> LeqNodeGen.create(lhs, rhs);

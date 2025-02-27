@@ -138,7 +138,19 @@ maybeAssignment[Attr attr] returns [ExprNode result]
     $result = factory.createAssn($lhs.result, $rhs.result);
   }
 |
+  maybeConjunction[attr] { $result = $maybeConjunction.result; }
+;
+
+maybeConjunction[Attr attr] returns [ExprNode result]
+:
   maybeCmp[attr] { $result = $maybeCmp.result; }
+|
+  maybeCmp[Attr.VAL] { $result = $maybeCmp.result; }
+  (
+    op='&&' rhs=maybeCmp[Attr.VAL] {
+      $result = factory.createBinary($op, $result, $rhs.result);
+    }
+  )+
 ;
 
 maybeCmp[Attr attr] returns [ExprNode result]
@@ -216,6 +228,9 @@ primary[Attr attr] returns [ExprNode result]
 |
   {$attr != Attr.REF}?
   'false' { $result = new LongLiteralNode(0); }
+|
+  {$attr == Attr.VOID}?
+  'skip' { $result = new SkipNode(); }
 |
   '(' scopeExpr[attr, true] ')' { $result = $scopeExpr.result; }
 |
