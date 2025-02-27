@@ -8,6 +8,12 @@ import org.antlr.v4.runtime.Token;
 import ru.usachev63.lamatruffle.LamaLanguage;
 import ru.usachev63.lamatruffle.nodes.*;
 import ru.usachev63.lamatruffle.nodes.expr.*;
+import ru.usachev63.lamatruffle.nodes.expr.AddNodeGen;
+import ru.usachev63.lamatruffle.nodes.expr.DivNodeGen;
+import ru.usachev63.lamatruffle.nodes.expr.MulNodeGen;
+import ru.usachev63.lamatruffle.nodes.expr.RemNodeGen;
+import ru.usachev63.lamatruffle.nodes.expr.SubNodeGen;
+import ru.usachev63.lamatruffle.nodes.expr.numeric.*;
 
 import java.util.*;
 
@@ -147,6 +153,12 @@ public class LamaNodeFactory {
 
     public ExprNode createBinary(Token opToken, ExprNode lhs, ExprNode rhs) {
         return switch (opToken.getText()) {
+            case "==" -> EqNodeGen.create(lhs, rhs);
+            case "!=" -> NeqNodeGen.create(lhs, rhs);
+            case "<=" -> LeqNodeGen.create(lhs, rhs);
+            case "<" -> LtNodeGen.create(lhs, rhs);
+            case ">=" -> GeqNodeGen.create(lhs, rhs);
+            case ">" -> GtNodeGen.create(lhs, rhs);
             case "+" -> AddNodeGen.create(lhs, rhs);
             case "-" -> SubNodeGen.create(lhs, rhs);
             case "*" -> MulNodeGen.create(lhs, rhs);

@@ -12,6 +12,7 @@ import com.oracle.truffle.api.source.*;
 import ru.usachev63.lamatruffle.*;
 import ru.usachev63.lamatruffle.nodes.*;
 import ru.usachev63.lamatruffle.nodes.expr.*;
+import ru.usachev63.lamatruffle.nodes.expr.numeric.*;
 import ru.usachev63.lamatruffle.nodes.builtins.*;
 }
 
@@ -108,35 +109,51 @@ LIDENT ('=' basicExpression[Attr.VAL])? {
 
 expression[Attr attr] returns [ExprNode result]
 :
-basicExpression[attr] { $result = $basicExpression.result; }
+  basicExpression[attr] { $result = $basicExpression.result; }
 |
-basicExpression[Attr.VOID]
-';'
-expression[attr] { $result = new SeqNode($basicExpression.result, $expression.result); }
+  basicExpression[Attr.VOID]
+  ';'
+  expression[attr] { $result = new SeqNode($basicExpression.result, $expression.result); }
 ;
 
 basicExpression[Attr attr] returns [ExprNode result]
 :
-maybeAssignment[attr] { $result = $maybeAssignment.result; }
+  maybeAssignment[attr] { $result = $maybeAssignment.result; }
 ;
 
 maybeAssignment[Attr attr] returns [ExprNode result]
 :
-{$attr != Attr.REF}? lhs=varRef[Attr.REF] ':=' rhs=maybeAssignment[Attr.VAL] { $result = factory.createAssn($lhs.result, $rhs.result); }
+  {$attr != Attr.REF}?
+  lhs=varRef[Attr.REF] ':=' rhs=maybeAssignment[Attr.VAL] {
+    $result = factory.createAssn($lhs.result, $rhs.result);
+  }
 |
-maybeAddSub[attr] { $result = $maybeAddSub.result; }
+  maybeCmp[attr] { $result = $maybeCmp.result; }
+;
+
+maybeCmp[Attr attr] returns [ExprNode result]
+:
+  {$attr != Attr.REF}?
+  lhs=maybeAddSub[Attr.VAL]
+  op=('==' | '!=' | '<=' | '<' | '>=' | '>')
+  rhs=maybeAddSub[Attr.VAL] {
+    $result = factory.createBinary($op, $lhs.result, $rhs.result);
+  }
+|
+  maybeAddSub[attr] { $result = $maybeAddSub.result; }
 ;
 
 maybeAddSub[Attr attr] returns [ExprNode result]
 :
-maybeMulDivRem[attr] { $result = $maybeMulDivRem.result; }
+  maybeMulDivRem[attr] { $result = $maybeMulDivRem.result; }
 |
-{$attr != Attr.REF}? maybeMulDivRem[Attr.VAL] { $result = $maybeMulDivRem.result; }
-(
-  op=('+' | '-') rhs=maybeMulDivRem[Attr.VAL] {
-    $result = factory.createBinary($op, $result, $rhs.result);
-  }
-)+
+  {$attr != Attr.REF}?
+  maybeMulDivRem[Attr.VAL] { $result = $maybeMulDivRem.result; }
+  (
+    op=('+' | '-') rhs=maybeMulDivRem[Attr.VAL] {
+      $result = factory.createBinary($op, $result, $rhs.result);
+    }
+  )+
 ;
 
 maybeMulDivRem[Attr attr] returns [ExprNode result]
@@ -153,7 +170,9 @@ binaryOperand[attr] { $result = $binaryOperand.result; }
 
 binaryOperand[Attr attr] returns [ExprNode result]
 :
-postfixExpression[attr] { $result = $postfixExpression.result; }
+  postfixExpression[attr] {
+    $result = $postfixExpression.result;
+  }
 ;
 
 postfixExpression[Attr attr] returns [ExprNode result]
