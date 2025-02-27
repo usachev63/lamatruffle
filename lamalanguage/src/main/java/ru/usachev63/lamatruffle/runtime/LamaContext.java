@@ -29,6 +29,10 @@ public final class LamaContext {
         return REFERENCE.get(node);
     }
 
+    public BufferedReader getInput() {
+        return input;
+    }
+
     public PrintWriter getOutput() {
         return output;
     }

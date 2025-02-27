@@ -163,6 +163,10 @@ postfixExpression[Attr attr] returns [ExprNode result]
   'write' '(' arg=expression[attr.VAL] ')' {
     $result = new WriteBuiltinNode($arg.result);
   }
+| {$attr != Attr.REF}?
+  'read' '(' ')' {
+    $result = new ReadBuiltinNode();
+  }
 ;
 
 primary[Attr attr] returns [ExprNode result]
