@@ -248,7 +248,12 @@ primary[Attr attr] returns [ExprNode result]
 
 const_ returns [LongLiteralNode result]
 :
-DECIMAL { $result = factory.createConst($DECIMAL); }
+  minus='-'? DECIMAL {
+    long value = Long.parseLong($DECIMAL.getText());
+    if ($minus != null)
+      value = -value;
+    $result = new LongLiteralNode(value);
+  }
 ;
 
 stringLiteral returns [StringLiteralNode result]
@@ -339,7 +344,7 @@ fragment DIGIT : [0-9];
 
 UIDENT : [A-Z][a-zA-Z_0-9]*;
 LIDENT : [a-z][a-zA-Z_0-9]*;
-DECIMAL : '-'? [0-9]+;
+DECIMAL : [0-9]+;
 STRING : '"' (~["\r\n] | '""')* '"';
 CHAR : '\'' (
   ~'\''

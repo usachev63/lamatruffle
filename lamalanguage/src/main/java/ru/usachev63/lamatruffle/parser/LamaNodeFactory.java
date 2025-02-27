@@ -95,14 +95,6 @@ public class LamaNodeFactory {
 
     /* parsing scope end */
 
-    public LongLiteralNode createConst(Token literalToken) {
-        try {
-            return new LongLiteralNode(Long.parseLong(literalToken.getText()));
-        } catch (NumberFormatException e) {
-            return null;
-        }
-    }
-
     public StringLiteralNode createStringLiteral(Token literalToken) {
         return new StringLiteralNode(TruffleString.fromJavaStringUncached(stringLiteralValueOf(literalToken.getText()), TruffleString.Encoding.US_ASCII));
     }
