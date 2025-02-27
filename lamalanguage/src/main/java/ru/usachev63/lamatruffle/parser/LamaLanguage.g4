@@ -12,6 +12,7 @@ import com.oracle.truffle.api.source.*;
 import ru.usachev63.lamatruffle.*;
 import ru.usachev63.lamatruffle.nodes.*;
 import ru.usachev63.lamatruffle.nodes.expr.*;
+import ru.usachev63.lamatruffle.nodes.builtins.*;
 }
 
 @parser::members
@@ -157,7 +158,11 @@ postfixExpression[attr] { $result = $postfixExpression.result; }
 
 postfixExpression[Attr attr] returns [ExprNode result]
 :
-primary[attr] { $result = $primary.result; }
+  primary[attr] { $result = $primary.result; }
+| {$attr != Attr.REF}?
+  'write' '(' arg=expression[attr.VAL] ')' {
+    $result = new WriteBuiltinNode($arg.result);
+  }
 ;
 
 primary[Attr attr] returns [ExprNode result]

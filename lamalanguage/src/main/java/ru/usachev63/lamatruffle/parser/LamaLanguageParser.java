@@ -11,6 +11,7 @@ import com.oracle.truffle.api.source.*;
 import ru.usachev63.lamatruffle.*;
 import ru.usachev63.lamatruffle.nodes.*;
 import ru.usachev63.lamatruffle.nodes.expr.*;
+import ru.usachev63.lamatruffle.nodes.builtins.*;
 
 import org.antlr.v4.runtime.atn.*;
 import org.antlr.v4.runtime.dfa.DFA;
@@ -30,8 +31,8 @@ public class LamaLanguageParser extends Parser {
 		new PredictionContextCache();
 	public static final int
 		T__0=1, T__1=2, T__2=3, T__3=4, T__4=5, T__5=6, T__6=7, T__7=8, T__8=9, 
-		T__9=10, T__10=11, T__11=12, WS=13, COMMENT=14, LINE_COMMENT=15, UIDENT=16, 
-		LIDENT=17, DECIMAL=18, STRING=19, CHAR=20;
+		T__9=10, T__10=11, T__11=12, T__12=13, T__13=14, T__14=15, WS=16, COMMENT=17, 
+		LINE_COMMENT=18, UIDENT=19, LIDENT=20, DECIMAL=21, STRING=22, CHAR=23;
 	public static final int
 		RULE_lama = 0, RULE_scopeExpr = 1, RULE_definition = 2, RULE_variableDefinition = 3, 
 		RULE_variableDefinitionSequence = 4, RULE_variableDefinitionItem = 5, 
@@ -52,15 +53,15 @@ public class LamaLanguageParser extends Parser {
 	private static String[] makeLiteralNames() {
 		return new String[] {
 			null, "'var'", "';'", "','", "'='", "':='", "'+'", "'-'", "'*'", "'/'", 
-			"'%'", "'true'", "'false'"
+			"'%'", "'write'", "'('", "')'", "'true'", "'false'"
 		};
 	}
 	private static final String[] _LITERAL_NAMES = makeLiteralNames();
 	private static String[] makeSymbolicNames() {
 		return new String[] {
 			null, null, null, null, null, null, null, null, null, null, null, null, 
-			null, "WS", "COMMENT", "LINE_COMMENT", "UIDENT", "LIDENT", "DECIMAL", 
-			"STRING", "CHAR"
+			null, null, null, null, "WS", "COMMENT", "LINE_COMMENT", "UIDENT", "LIDENT", 
+			"DECIMAL", "STRING", "CHAR"
 		};
 	}
 	private static final String[] _SYMBOLIC_NAMES = makeSymbolicNames();
@@ -822,8 +823,12 @@ public class LamaLanguageParser extends Parser {
 		public Attr attr;
 		public ExprNode result;
 		public PrimaryContext primary;
+		public ExpressionContext arg;
 		public PrimaryContext primary() {
 			return getRuleContext(PrimaryContext.class,0);
+		}
+		public ExpressionContext expression() {
+			return getRuleContext(ExpressionContext.class,0);
 		}
 		public PostfixExpressionContext(ParserRuleContext parent, int invokingState) { super(parent, invokingState); }
 		public PostfixExpressionContext(ParserRuleContext parent, int invokingState, Attr attr) {
@@ -837,11 +842,35 @@ public class LamaLanguageParser extends Parser {
 		PostfixExpressionContext _localctx = new PostfixExpressionContext(_ctx, getState(), attr);
 		enterRule(_localctx, 24, RULE_postfixExpression);
 		try {
-			enterOuterAlt(_localctx, 1);
-			{
-			setState(132);
-			((PostfixExpressionContext)_localctx).primary = primary(attr);
-			 ((PostfixExpressionContext)_localctx).result =  ((PostfixExpressionContext)_localctx).primary.result; 
+			setState(142);
+			_errHandler.sync(this);
+			switch ( getInterpreter().adaptivePredict(_input,10,_ctx) ) {
+			case 1:
+				enterOuterAlt(_localctx, 1);
+				{
+				setState(132);
+				((PostfixExpressionContext)_localctx).primary = primary(attr);
+				 ((PostfixExpressionContext)_localctx).result =  ((PostfixExpressionContext)_localctx).primary.result; 
+				}
+				break;
+			case 2:
+				enterOuterAlt(_localctx, 2);
+				{
+				setState(135);
+				if (!(_localctx.attr != Attr.REF)) throw new FailedPredicateException(this, "$attr != Attr.REF");
+				setState(136);
+				match(T__10);
+				setState(137);
+				match(T__11);
+				setState(138);
+				((PostfixExpressionContext)_localctx).arg = expression(attr.VAL);
+				setState(139);
+				match(T__12);
+
+				    ((PostfixExpressionContext)_localctx).result =  new WriteBuiltinNode(((PostfixExpressionContext)_localctx).arg.result);
+				  
+				}
+				break;
 			}
 		}
 		catch (RecognitionException re) {
@@ -887,15 +916,15 @@ public class LamaLanguageParser extends Parser {
 		PrimaryContext _localctx = new PrimaryContext(_ctx, getState(), attr);
 		enterRule(_localctx, 26, RULE_primary);
 		try {
-			setState(156);
+			setState(165);
 			_errHandler.sync(this);
-			switch ( getInterpreter().adaptivePredict(_input,10,_ctx) ) {
+			switch ( getInterpreter().adaptivePredict(_input,11,_ctx) ) {
 			case 1:
 				enterOuterAlt(_localctx, 1);
 				{
-				setState(135);
+				setState(144);
 				if (!(_localctx.attr != Attr.REF)) throw new FailedPredicateException(this, "$attr != Attr.REF");
-				setState(136);
+				setState(145);
 				((PrimaryContext)_localctx).const_ = const_();
 				 ((PrimaryContext)_localctx).result =  ((PrimaryContext)_localctx).const_.result; 
 				}
@@ -903,9 +932,9 @@ public class LamaLanguageParser extends Parser {
 			case 2:
 				enterOuterAlt(_localctx, 2);
 				{
-				setState(139);
+				setState(148);
 				if (!(_localctx.attr != Attr.REF)) throw new FailedPredicateException(this, "$attr != Attr.REF");
-				setState(140);
+				setState(149);
 				((PrimaryContext)_localctx).stringLiteral = stringLiteral();
 				 ((PrimaryContext)_localctx).result =  ((PrimaryContext)_localctx).stringLiteral.result; 
 				}
@@ -913,9 +942,9 @@ public class LamaLanguageParser extends Parser {
 			case 3:
 				enterOuterAlt(_localctx, 3);
 				{
-				setState(143);
+				setState(152);
 				if (!(_localctx.attr != Attr.REF)) throw new FailedPredicateException(this, "$attr != Attr.REF");
-				setState(144);
+				setState(153);
 				((PrimaryContext)_localctx).charLiteral = charLiteral();
 				 ((PrimaryContext)_localctx).result =  ((PrimaryContext)_localctx).charLiteral.result; 
 				}
@@ -923,7 +952,7 @@ public class LamaLanguageParser extends Parser {
 			case 4:
 				enterOuterAlt(_localctx, 4);
 				{
-				setState(147);
+				setState(156);
 				((PrimaryContext)_localctx).varRef = varRef(attr);
 				 ((PrimaryContext)_localctx).result =  ((PrimaryContext)_localctx).varRef.result; 
 				}
@@ -931,20 +960,20 @@ public class LamaLanguageParser extends Parser {
 			case 5:
 				enterOuterAlt(_localctx, 5);
 				{
-				setState(150);
+				setState(159);
 				if (!(_localctx.attr != Attr.REF)) throw new FailedPredicateException(this, "$attr != Attr.REF");
-				setState(151);
-				match(T__10);
+				setState(160);
+				match(T__13);
 				 ((PrimaryContext)_localctx).result =  new LongLiteralNode(1); 
 				}
 				break;
 			case 6:
 				enterOuterAlt(_localctx, 6);
 				{
-				setState(153);
+				setState(162);
 				if (!(_localctx.attr != Attr.REF)) throw new FailedPredicateException(this, "$attr != Attr.REF");
-				setState(154);
-				match(T__11);
+				setState(163);
+				match(T__14);
 				 ((PrimaryContext)_localctx).result =  new LongLiteralNode(0); 
 				}
 				break;
@@ -978,7 +1007,7 @@ public class LamaLanguageParser extends Parser {
 		try {
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(158);
+			setState(167);
 			((Const_Context)_localctx).DECIMAL = match(DECIMAL);
 			 ((Const_Context)_localctx).result =  factory.createConst(((Const_Context)_localctx).DECIMAL); 
 			}
@@ -1011,7 +1040,7 @@ public class LamaLanguageParser extends Parser {
 		try {
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(161);
+			setState(170);
 			((StringLiteralContext)_localctx).STRING = match(STRING);
 			 ((StringLiteralContext)_localctx).result =  factory.createStringLiteral(((StringLiteralContext)_localctx).STRING); 
 			}
@@ -1044,7 +1073,7 @@ public class LamaLanguageParser extends Parser {
 		try {
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(164);
+			setState(173);
 			((CharLiteralContext)_localctx).CHAR = match(CHAR);
 			 ((CharLiteralContext)_localctx).result =  factory.createCharLiteral(((CharLiteralContext)_localctx).CHAR); 
 			}
@@ -1080,7 +1109,7 @@ public class LamaLanguageParser extends Parser {
 		try {
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(167);
+			setState(176);
 			((VarRefContext)_localctx).LIDENT = match(LIDENT);
 
 			  LocalVarRefNode ref = factory.createLocalVarRef(((VarRefContext)_localctx).LIDENT);
@@ -1110,6 +1139,8 @@ public class LamaLanguageParser extends Parser {
 			return maybeAddSub_sempred((MaybeAddSubContext)_localctx, predIndex);
 		case 10:
 			return maybeMulDivRem_sempred((MaybeMulDivRemContext)_localctx, predIndex);
+		case 12:
+			return postfixExpression_sempred((PostfixExpressionContext)_localctx, predIndex);
 		case 13:
 			return primary_sempred((PrimaryContext)_localctx, predIndex);
 		}
@@ -1136,10 +1167,15 @@ public class LamaLanguageParser extends Parser {
 		}
 		return true;
 	}
-	private boolean primary_sempred(PrimaryContext _localctx, int predIndex) {
+	private boolean postfixExpression_sempred(PostfixExpressionContext _localctx, int predIndex) {
 		switch (predIndex) {
 		case 3:
 			return _localctx.attr != Attr.REF;
+		}
+		return true;
+	}
+	private boolean primary_sempred(PrimaryContext _localctx, int predIndex) {
+		switch (predIndex) {
 		case 4:
 			return _localctx.attr != Attr.REF;
 		case 5:
@@ -1148,12 +1184,14 @@ public class LamaLanguageParser extends Parser {
 			return _localctx.attr != Attr.REF;
 		case 7:
 			return _localctx.attr != Attr.REF;
+		case 8:
+			return _localctx.attr != Attr.REF;
 		}
 		return true;
 	}
 
 	public static final String _serializedATN =
-		"\u0004\u0001\u0014\u00ab\u0002\u0000\u0007\u0000\u0002\u0001\u0007\u0001"+
+		"\u0004\u0001\u0017\u00b4\u0002\u0000\u0007\u0000\u0002\u0001\u0007\u0001"+
 		"\u0002\u0002\u0007\u0002\u0002\u0003\u0007\u0003\u0002\u0004\u0007\u0004"+
 		"\u0002\u0005\u0007\u0005\u0002\u0006\u0007\u0006\u0002\u0007\u0007\u0007"+
 		"\u0002\b\u0007\b\u0002\t\u0007\t\u0002\n\u0007\n\u0002\u000b\u0007\u000b"+
@@ -1172,21 +1210,22 @@ public class LamaLanguageParser extends Parser {
 		"\t\u0004\tl\b\t\u000b\t\f\tm\u0003\tp\b\t\u0001\n\u0001\n\u0001\n\u0001"+
 		"\n\u0001\n\u0001\n\u0001\n\u0001\n\u0001\n\u0001\n\u0004\n|\b\n\u000b"+
 		"\n\f\n}\u0003\n\u0080\b\n\u0001\u000b\u0001\u000b\u0001\u000b\u0001\f"+
-		"\u0001\f\u0001\f\u0001\r\u0001\r\u0001\r\u0001\r\u0001\r\u0001\r\u0001"+
+		"\u0001\f\u0001\f\u0001\f\u0001\f\u0001\f\u0001\f\u0001\f\u0001\f\u0001"+
+		"\f\u0003\f\u008f\b\f\u0001\r\u0001\r\u0001\r\u0001\r\u0001\r\u0001\r\u0001"+
 		"\r\u0001\r\u0001\r\u0001\r\u0001\r\u0001\r\u0001\r\u0001\r\u0001\r\u0001"+
-		"\r\u0001\r\u0001\r\u0001\r\u0001\r\u0001\r\u0003\r\u009d\b\r\u0001\u000e"+
+		"\r\u0001\r\u0001\r\u0001\r\u0001\r\u0001\r\u0003\r\u00a6\b\r\u0001\u000e"+
 		"\u0001\u000e\u0001\u000e\u0001\u000f\u0001\u000f\u0001\u000f\u0001\u0010"+
 		"\u0001\u0010\u0001\u0010\u0001\u0011\u0001\u0011\u0001\u0011\u0001\u0011"+
 		"\u0000\u0000\u0012\u0000\u0002\u0004\u0006\b\n\f\u000e\u0010\u0012\u0014"+
 		"\u0016\u0018\u001a\u001c\u001e \"\u0000\u0002\u0001\u0000\u0006\u0007"+
-		"\u0001\u0000\b\n\u00a7\u0000$\u0001\u0000\u0000\u0000\u0002(\u0001\u0000"+
+		"\u0001\u0000\b\n\u00b1\u0000$\u0001\u0000\u0000\u0000\u0002(\u0001\u0000"+
 		"\u0000\u0000\u00044\u0001\u0000\u0000\u0000\u00066\u0001\u0000\u0000\u0000"+
 		"\b:\u0001\u0000\u0000\u0000\nB\u0001\u0000\u0000\u0000\fQ\u0001\u0000"+
 		"\u0000\u0000\u000eS\u0001\u0000\u0000\u0000\u0010_\u0001\u0000\u0000\u0000"+
 		"\u0012o\u0001\u0000\u0000\u0000\u0014\u007f\u0001\u0000\u0000\u0000\u0016"+
-		"\u0081\u0001\u0000\u0000\u0000\u0018\u0084\u0001\u0000\u0000\u0000\u001a"+
-		"\u009c\u0001\u0000\u0000\u0000\u001c\u009e\u0001\u0000\u0000\u0000\u001e"+
-		"\u00a1\u0001\u0000\u0000\u0000 \u00a4\u0001\u0000\u0000\u0000\"\u00a7"+
+		"\u0081\u0001\u0000\u0000\u0000\u0018\u008e\u0001\u0000\u0000\u0000\u001a"+
+		"\u00a5\u0001\u0000\u0000\u0000\u001c\u00a7\u0001\u0000\u0000\u0000\u001e"+
+		"\u00aa\u0001\u0000\u0000\u0000 \u00ad\u0001\u0000\u0000\u0000\"\u00b0"+
 		"\u0001\u0000\u0000\u0000$%\u0003\u0002\u0001\u0000%&\u0006\u0000\uffff"+
 		"\uffff\u0000&\'\u0005\u0000\u0000\u0001\'\u0001\u0001\u0000\u0000\u0000"+
 		"(,\u0006\u0001\uffff\uffff\u0000)+\u0003\u0004\u0002\u0000*)\u0001\u0000"+
@@ -1199,7 +1238,7 @@ public class LamaLanguageParser extends Parser {
 		"\u00009\u0007\u0001\u0000\u0000\u0000:?\u0003\n\u0005\u0000;<\u0005\u0003"+
 		"\u0000\u0000<>\u0003\n\u0005\u0000=;\u0001\u0000\u0000\u0000>A\u0001\u0000"+
 		"\u0000\u0000?=\u0001\u0000\u0000\u0000?@\u0001\u0000\u0000\u0000@\t\u0001"+
-		"\u0000\u0000\u0000A?\u0001\u0000\u0000\u0000BE\u0005\u0011\u0000\u0000"+
+		"\u0000\u0000\u0000A?\u0001\u0000\u0000\u0000BE\u0005\u0014\u0000\u0000"+
 		"CD\u0005\u0004\u0000\u0000DF\u0003\u000e\u0007\u0000EC\u0001\u0000\u0000"+
 		"\u0000EF\u0001\u0000\u0000\u0000FG\u0001\u0000\u0000\u0000GH\u0006\u0005"+
 		"\uffff\uffff\u0000H\u000b\u0001\u0000\u0000\u0000IJ\u0003\u000e\u0007"+
@@ -1228,28 +1267,32 @@ public class LamaLanguageParser extends Parser {
 		"\u0001\u0000\u0000\u0000\u0080\u0015\u0001\u0000\u0000\u0000\u0081\u0082"+
 		"\u0003\u0018\f\u0000\u0082\u0083\u0006\u000b\uffff\uffff\u0000\u0083\u0017"+
 		"\u0001\u0000\u0000\u0000\u0084\u0085\u0003\u001a\r\u0000\u0085\u0086\u0006"+
-		"\f\uffff\uffff\u0000\u0086\u0019\u0001\u0000\u0000\u0000\u0087\u0088\u0004"+
-		"\r\u0003\u0001\u0088\u0089\u0003\u001c\u000e\u0000\u0089\u008a\u0006\r"+
-		"\uffff\uffff\u0000\u008a\u009d\u0001\u0000\u0000\u0000\u008b\u008c\u0004"+
-		"\r\u0004\u0001\u008c\u008d\u0003\u001e\u000f\u0000\u008d\u008e\u0006\r"+
-		"\uffff\uffff\u0000\u008e\u009d\u0001\u0000\u0000\u0000\u008f\u0090\u0004"+
-		"\r\u0005\u0001\u0090\u0091\u0003 \u0010\u0000\u0091\u0092\u0006\r\uffff"+
-		"\uffff\u0000\u0092\u009d\u0001\u0000\u0000\u0000\u0093\u0094\u0003\"\u0011"+
-		"\u0000\u0094\u0095\u0006\r\uffff\uffff\u0000\u0095\u009d\u0001\u0000\u0000"+
-		"\u0000\u0096\u0097\u0004\r\u0006\u0001\u0097\u0098\u0005\u000b\u0000\u0000"+
-		"\u0098\u009d\u0006\r\uffff\uffff\u0000\u0099\u009a\u0004\r\u0007\u0001"+
-		"\u009a\u009b\u0005\f\u0000\u0000\u009b\u009d\u0006\r\uffff\uffff\u0000"+
-		"\u009c\u0087\u0001\u0000\u0000\u0000\u009c\u008b\u0001\u0000\u0000\u0000"+
-		"\u009c\u008f\u0001\u0000\u0000\u0000\u009c\u0093\u0001\u0000\u0000\u0000"+
-		"\u009c\u0096\u0001\u0000\u0000\u0000\u009c\u0099\u0001\u0000\u0000\u0000"+
-		"\u009d\u001b\u0001\u0000\u0000\u0000\u009e\u009f\u0005\u0012\u0000\u0000"+
-		"\u009f\u00a0\u0006\u000e\uffff\uffff\u0000\u00a0\u001d\u0001\u0000\u0000"+
-		"\u0000\u00a1\u00a2\u0005\u0013\u0000\u0000\u00a2\u00a3\u0006\u000f\uffff"+
-		"\uffff\u0000\u00a3\u001f\u0001\u0000\u0000\u0000\u00a4\u00a5\u0005\u0014"+
-		"\u0000\u0000\u00a5\u00a6\u0006\u0010\uffff\uffff\u0000\u00a6!\u0001\u0000"+
-		"\u0000\u0000\u00a7\u00a8\u0005\u0011\u0000\u0000\u00a8\u00a9\u0006\u0011"+
-		"\uffff\uffff\u0000\u00a9#\u0001\u0000\u0000\u0000\u000b,0?EQ_mo}\u007f"+
-		"\u009c";
+		"\f\uffff\uffff\u0000\u0086\u008f\u0001\u0000\u0000\u0000\u0087\u0088\u0004"+
+		"\f\u0003\u0001\u0088\u0089\u0005\u000b\u0000\u0000\u0089\u008a\u0005\f"+
+		"\u0000\u0000\u008a\u008b\u0003\f\u0006\u0000\u008b\u008c\u0005\r\u0000"+
+		"\u0000\u008c\u008d\u0006\f\uffff\uffff\u0000\u008d\u008f\u0001\u0000\u0000"+
+		"\u0000\u008e\u0084\u0001\u0000\u0000\u0000\u008e\u0087\u0001\u0000\u0000"+
+		"\u0000\u008f\u0019\u0001\u0000\u0000\u0000\u0090\u0091\u0004\r\u0004\u0001"+
+		"\u0091\u0092\u0003\u001c\u000e\u0000\u0092\u0093\u0006\r\uffff\uffff\u0000"+
+		"\u0093\u00a6\u0001\u0000\u0000\u0000\u0094\u0095\u0004\r\u0005\u0001\u0095"+
+		"\u0096\u0003\u001e\u000f\u0000\u0096\u0097\u0006\r\uffff\uffff\u0000\u0097"+
+		"\u00a6\u0001\u0000\u0000\u0000\u0098\u0099\u0004\r\u0006\u0001\u0099\u009a"+
+		"\u0003 \u0010\u0000\u009a\u009b\u0006\r\uffff\uffff\u0000\u009b\u00a6"+
+		"\u0001\u0000\u0000\u0000\u009c\u009d\u0003\"\u0011\u0000\u009d\u009e\u0006"+
+		"\r\uffff\uffff\u0000\u009e\u00a6\u0001\u0000\u0000\u0000\u009f\u00a0\u0004"+
+		"\r\u0007\u0001\u00a0\u00a1\u0005\u000e\u0000\u0000\u00a1\u00a6\u0006\r"+
+		"\uffff\uffff\u0000\u00a2\u00a3\u0004\r\b\u0001\u00a3\u00a4\u0005\u000f"+
+		"\u0000\u0000\u00a4\u00a6\u0006\r\uffff\uffff\u0000\u00a5\u0090\u0001\u0000"+
+		"\u0000\u0000\u00a5\u0094\u0001\u0000\u0000\u0000\u00a5\u0098\u0001\u0000"+
+		"\u0000\u0000\u00a5\u009c\u0001\u0000\u0000\u0000\u00a5\u009f\u0001\u0000"+
+		"\u0000\u0000\u00a5\u00a2\u0001\u0000\u0000\u0000\u00a6\u001b\u0001\u0000"+
+		"\u0000\u0000\u00a7\u00a8\u0005\u0015\u0000\u0000\u00a8\u00a9\u0006\u000e"+
+		"\uffff\uffff\u0000\u00a9\u001d\u0001\u0000\u0000\u0000\u00aa\u00ab\u0005"+
+		"\u0016\u0000\u0000\u00ab\u00ac\u0006\u000f\uffff\uffff\u0000\u00ac\u001f"+
+		"\u0001\u0000\u0000\u0000\u00ad\u00ae\u0005\u0017\u0000\u0000\u00ae\u00af"+
+		"\u0006\u0010\uffff\uffff\u0000\u00af!\u0001\u0000\u0000\u0000\u00b0\u00b1"+
+		"\u0005\u0014\u0000\u0000\u00b1\u00b2\u0006\u0011\uffff\uffff\u0000\u00b2"+
+		"#\u0001\u0000\u0000\u0000\f,0?EQ_mo}\u007f\u008e\u00a5";
 	public static final ATN _ATN =
 		new ATNDeserializer().deserialize(_serializedATN.toCharArray());
 	static {
