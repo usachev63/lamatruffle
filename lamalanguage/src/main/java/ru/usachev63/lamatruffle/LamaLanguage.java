@@ -10,7 +10,7 @@ import ru.usachev63.lamatruffle.runtime.LamaContext;
 public final class LamaLanguage extends TruffleLanguage<LamaContext> {
     @Override
     protected LamaContext createContext(Env env) {
-        return new LamaContext();
+        return new LamaContext(this, env);
     }
 
     @Override

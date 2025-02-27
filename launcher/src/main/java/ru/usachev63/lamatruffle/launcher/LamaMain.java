@@ -105,6 +105,7 @@ public final class LamaMain {
         try {
             Value result = context.eval(source);
             if (launcherOutput && !result.isNull()) {
+                out.println("Result of the program is:");
                 out.println(result.toString());
             }
             return 0;
