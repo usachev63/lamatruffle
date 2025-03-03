@@ -224,6 +224,19 @@ postfixExpression[Attr attr] returns [ExprNode result]
   'read' '(' ')' {
     $result = new ReadBuiltinNode();
   }
+| {$attr != Attr.REF}?
+  callee=varRef[Attr.VAL] { List<ExprNode> argumentNodes = new ArrayList<>(); }
+  '('
+    (
+      expression[Attr.VAL] { argumentNodes.add($expression.result); }
+      (
+        ','
+        expression[Attr.VAL] { argumentNodes.add($expression.result); }
+      )*
+    )?
+  ')' {
+    $result = factory.createCallExpr($callee.result, argumentNodes);
+  }
 ;
 
 primary[Attr attr] returns [ExprNode result]

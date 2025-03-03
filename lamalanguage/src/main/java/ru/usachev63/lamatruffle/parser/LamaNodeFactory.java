@@ -30,7 +30,6 @@ public class LamaNodeFactory {
     private final LamaLanguage language;
     private final Source source;
     private LamaRootNode main;
-    private final Map<TruffleString, LamaRootNode> allFunctions = new HashMap<>();
 
     static class Frame {
         protected final String functionName;
@@ -93,10 +92,10 @@ public class LamaNodeFactory {
 
     public void finishFrame(ScopeExprNode body) {
         assert frame != null;
-        TruffleString name = TruffleString.fromJavaStringUncached(frame.functionName, TruffleString.Encoding.UTF_8);
-        if (allFunctions.containsKey(name)) {
-            throw new RuntimeException("multiple definition");
-        }
+        String name = frame.functionName;
+        int parameterCount = frame.parameterCount;
+        TruffleString nameTruffleString =
+            TruffleString.fromJavaStringUncached(name, TruffleString.Encoding.UTF_8);
         Collections.reverse(frame.prolog);
         for (var expr : frame.prolog) {
             body.setBody(new SeqNode(expr, body.getBody()));
@@ -106,10 +105,10 @@ public class LamaNodeFactory {
             frame.frameDescriptorBuilder.build(),
             body,
             null,
-            name
+            nameTruffleString
         );
-        allFunctions.put(name, rootNode);
         frame = frame.parent;
+        frame.currentScope.prolog.add(new FuncDeclNode(name, parameterCount, rootNode));
     }
 
     /* parsing scope begin */
@@ -162,6 +161,10 @@ public class LamaNodeFactory {
     }
 
     /* parsing scope end */
+
+    public CallExprNode createCallExpr(ExprNode calleeNode, List<ExprNode> argumentNodes) {
+        return new CallExprNode(calleeNode, argumentNodes);
+    }
 
     public StringLiteralNode createStringLiteral(Token literalToken) {
         return new StringLiteralNode(TruffleString.fromJavaStringUncached(stringLiteralValueOf(literalToken.getText()), TruffleString.Encoding.US_ASCII));
