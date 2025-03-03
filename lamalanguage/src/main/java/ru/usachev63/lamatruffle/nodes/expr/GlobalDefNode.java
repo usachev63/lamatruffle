@@ -15,7 +15,7 @@ public class GlobalDefNode extends ExprNode {
         boolean result = LamaContext
             .get(this)
             .getGlobalScopeObject()
-            .newVariable(name, 0, false);
+            .newVariable(name, 0);
         if (!result)
             throw new RuntimeException("double definition of global " + name);
         return 0;

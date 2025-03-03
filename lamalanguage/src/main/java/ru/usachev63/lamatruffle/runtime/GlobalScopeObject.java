@@ -18,20 +18,13 @@ import java.util.*;
 @ExportLibrary(InteropLibrary.class)
 public final class GlobalScopeObject implements TruffleObject {
     private final Map<String, Object> variables = new HashMap<>();
-    private final Set<String> constants = new HashSet<>();
 
-    public boolean newVariable(String name, Object value, boolean isConst) {
+    public boolean newVariable(String name, Object value) {
         Object existingValue = this.variables.put(name, value);
-        if (isConst) {
-            this.constants.add(name);
-        }
         return existingValue == null;
     }
 
     public boolean updateVariable(String name, Object value) {
-        if (this.constants.contains(name)) {
-            throw new RuntimeException("Assignment to constant variable '" + name + "'");
-        }
         Object existingValue = this.variables.computeIfPresent(name, (k, v) -> value);
         return existingValue != null;
     }
