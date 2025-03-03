@@ -15,6 +15,7 @@ public final class LamaContext {
     private TruffleLanguage.Env env;
     private final BufferedReader input;
     private final PrintWriter output;
+    private final GlobalScopeObject globalScopeObject = new GlobalScopeObject();
 
     public LamaContext(LamaLanguage language, TruffleLanguage.Env env) {
         this.language = language;
@@ -35,5 +36,9 @@ public final class LamaContext {
 
     public PrintWriter getOutput() {
         return output;
+    }
+
+    public GlobalScopeObject getGlobalScopeObject() {
+        return this.globalScopeObject;
     }
 }

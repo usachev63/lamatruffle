@@ -73,49 +73,65 @@ public static class IfThenEntry {
 
 lama
 :
-scopeExpr[Attr.VOID, true] { factory.createMain($scopeExpr.result); }
-EOF
+  scopeExpression[Attr.VOID, true] { factory.createMain($scopeExpression.result); }
+  EOF
 ;
 
-scopeExpr[Attr attr, boolean popScope] returns [ScopeExprNode result]
-: { factory.startScope(); }
-definition*
-expression[attr]? { ExprNode body = null;
-                    if ($expression.ctx != null)
-                      body = $expression.result;
-                    $result = factory.finishScope(body, popScope);
-                  }
+scopeExpression[Attr attr, boolean popScope] returns [ScopeExprNode result] :
+  { factory.startScope(); }
+  scopeExpressionNoStart[attr, popScope] {
+    $result = $scopeExpressionNoStart.result;
+  }
+;
+
+scopeExpressionNoStart[Attr attr, boolean popScope] returns [ScopeExprNode result] :
+  definition*
+  expression[attr]? {
+    ExprNode body = null;
+    if ($expression.ctx != null)
+      body = $expression.result;
+    $result = factory.finishScope(body, popScope);
+  }
 ;
 
 definition
 :
-variableDefinition
+  variableDefinition
+|
+  functionDefinition
 ;
 
 variableDefinition
 :
-'var'
-variableDefinitionSequence
-';'
+  'var' variableDefinitionSequence ';'
 ;
 
 variableDefinitionSequence
 :
-variableDefinitionItem
-(
-  ','
-  variableDefinitionItem
-) *
+  variableDefinitionItem (',' variableDefinitionItem)*
 ;
 
 variableDefinitionItem
 :
-LIDENT ('=' basicExpression[Attr.VAL])? {
-  int frameSlot = factory.addVarDef($LIDENT);
-  if ($basicExpression.ctx != null)
-    factory.addVarInitializer(frameSlot, $basicExpression.result);
-}
+  LIDENT ('=' basicExpression[Attr.VAL])? {
+    factory.onVariableDefinition($LIDENT, $basicExpression.ctx != null ? $basicExpression.result : null);
+  }
 ;
+
+functionDefinition
+:
+  'fun' LIDENT {
+    factory.startFrame($LIDENT);
+    factory.startScope();
+  }
+  '(' functionParameters ')'
+  '{' body=scopeExpressionNoStart[Attr.VOID, true] '}'
+  { factory.finishFrame($body.result); }
+;
+
+functionParameters : (functionParameter (',' functionParameter)*)?;
+
+functionParameter : LIDENT { factory.addFormalParameter($LIDENT); };
 
 expression[Attr attr] returns [ExprNode result]
 :
@@ -232,7 +248,7 @@ primary[Attr attr] returns [ExprNode result]
   {$attr == Attr.VOID}?
   'skip' { $result = new SkipNode(); }
 |
-  '(' scopeExpr[attr, true] ')' { $result = $scopeExpr.result; }
+  '(' scopeExpression[attr, true] ')' { $result = $scopeExpression.result; }
 |
   ifExpression[attr] { $result = $ifExpression.result; }
 |
@@ -268,12 +284,12 @@ CHAR { $result = factory.createCharLiteral($CHAR); }
 
 varRef[Attr attr] returns [ExprNode result]
 :
-LIDENT {
-  LocalVarRefNode ref = factory.createLocalVarRef($LIDENT);
-  if (attr == Attr.REF)
-    $result = ref;
-  else
-    $result = factory.createVarRead(ref);
+  LIDENT {
+    ExprNode refNode = factory.createVarRef($LIDENT);
+    if (attr == Attr.REF)
+      $result = refNode;
+    else
+      $result = factory.createVarRead(refNode);
   }
 ;
 
@@ -305,14 +321,14 @@ elseBranch[Attr attr] returns [ExprNode result] // may be null
 
 whileDoExpression returns [ExprNode result]
 :
-  'while' cond=expression[Attr.VAL] 'do' body=scopeExpr[Attr.VOID, true] 'od' {
+  'while' cond=expression[Attr.VAL] 'do' body=scopeExpression[Attr.VOID, true] 'od' {
     $result = factory.createWhile($cond.result, $body.result);
   }
 ;
 
 doWhileExpression returns [ExprNode result]
 :
-  'do' body=scopeExpr[Attr.VOID, false] 'while' cond=expression[Attr.VAL] 'od' {
+  'do' body=scopeExpression[Attr.VOID, false] 'while' cond=expression[Attr.VAL] 'od' {
     factory.popScope();
     $result = new SeqNode($body.result, factory.createWhile($cond.result, $body.result));
   }
@@ -320,8 +336,8 @@ doWhileExpression returns [ExprNode result]
 
 forExpression returns [ExprNode result]
 :
-  'for' init=scopeExpr[Attr.VOID, false] ',' cond=expression[Attr.VAL] ',' incr=expression[Attr.VOID]
-  'do' body=scopeExpr[Attr.VOID, true] 'od' {
+  'for' init=scopeExpression[Attr.VOID, false] ',' cond=expression[Attr.VAL] ',' incr=expression[Attr.VOID]
+  'do' body=scopeExpression[Attr.VOID, true] 'od' {
     factory.popScope();
     $result = new SeqNode(
       $init.result,

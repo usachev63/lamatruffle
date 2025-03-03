@@ -15,26 +15,44 @@ import java.util.*;
 public class LamaNodeFactory {
     public LamaNodeFactory(LamaLanguage language, Source source) {
         this.language = language;
-        this.source=source;
+        this.source = source;
     }
 
-    public LamaRootNode getMain() {return main;}
+    public LamaRootNode getMain() {
+        return main;
+    }
 
     public void createMain(ScopeExprNode body) {
-        this.main = new LamaRootNode(language, frameDescriptorBuilder.build(), body, null, TruffleString.fromJavaStringUncached("main", TruffleString.Encoding.UTF_8));
-        frameDescriptorBuilder = null;
+        this.main = new LamaRootNode(language, frame.frameDescriptorBuilder.build(), body, null, TruffleString.fromJavaStringUncached("main", TruffleString.Encoding.UTF_8));
+        frame = null;
     }
 
     private final LamaLanguage language;
     private final Source source;
     private LamaRootNode main;
+    private final Map<TruffleString, LamaRootNode> allFunctions = new HashMap<>();
 
-    /* State while parsing a function. */
-    private FrameDescriptor.Builder frameDescriptorBuilder = FrameDescriptor.newBuilder();
+    static class Frame {
+        protected final String functionName;
+        protected final Frame parent;
+        protected FrameDescriptor.Builder frameDescriptorBuilder = FrameDescriptor.newBuilder();
+        protected int parameterCount = 0;
+        protected final List<ExprNode> prolog = new ArrayList<>();
+        protected Scope currentScope = null;
+
+        Frame(String functionName, Frame parent) {
+            this.functionName = functionName;
+            this.parent = parent;
+        }
+
+        public boolean isGlobal() {
+            return parent == null;
+        }
+    }
 
     static class Scope {
         protected final Scope outer;
-        private final List<AssnNode> initializers = new ArrayList<>();
+        private final List<ExprNode> prolog = new ArrayList<>();
         protected final Map<TruffleString, Integer> locals = new HashMap<>();
 
         Scope(Scope outer) {
@@ -53,44 +71,94 @@ public class LamaNodeFactory {
         }
     }
 
-    /* parsing scope begin */
+    Frame frame = new Frame("main", null);
 
-    private Scope currentScope = null;
-
-    public void startScope() {
-        currentScope = new Scope(currentScope);
+    public boolean isGlobalScope() {
+        return frame.isGlobal() && frame.currentScope.outer == null;
     }
 
-    public int addVarDef(Token varNameToken) {
-        TruffleString name = TruffleString.fromJavaStringUncached(varNameToken.getText(), TruffleString.Encoding.US_ASCII);
-        if (currentScope.find(name) != null) {
-            throw new LamaParseError(source, varNameToken.getLine(), varNameToken.getCharPositionInLine(), 1, String.format("cannot redefine %s", name));
+    public void startFrame(Token lident) {
+        frame = new Frame(lident.getText(), frame);
+    }
+
+    public void addFormalParameter(Token lident) {
+        int parameterIndex = frame.parameterCount++;
+        int frameSlot = addLocalVarDef(lident);
+        ExprNode assn = createAssn(
+            new LocalVarRefNode(frameSlot),
+            new ArgReadNode(parameterIndex)
+        );
+        frame.prolog.add(assn);
+    }
+
+    public void finishFrame(ScopeExprNode body) {
+        assert frame != null;
+        TruffleString name = TruffleString.fromJavaStringUncached(frame.functionName, TruffleString.Encoding.UTF_8);
+        if (allFunctions.containsKey(name)) {
+            throw new RuntimeException("multiple definition");
         }
-        int slot = frameDescriptorBuilder.addSlot(FrameSlotKind.Illegal, name, null);
-        currentScope.locals.put(name, slot);
+        Collections.reverse(frame.prolog);
+        for (var expr : frame.prolog) {
+            body.setBody(new SeqNode(expr, body.getBody()));
+        }
+        var rootNode = new LamaRootNode(
+            language,
+            frame.frameDescriptorBuilder.build(),
+            body,
+            null,
+            name
+        );
+        allFunctions.put(name, rootNode);
+        frame = frame.parent;
+    }
+
+    /* parsing scope begin */
+
+    public void startScope() {
+        frame.currentScope = new Scope(frame.currentScope);
+    }
+
+    public void onVariableDefinition(Token lident, ExprNode rhs /*maybe null*/) {
+        String name = lident.getText();
+        if (isGlobalScope()) {
+            frame.currentScope.prolog.add(new GlobalDefNode(name));
+            if (rhs != null)
+              frame.currentScope.prolog.add(new GlobalAssnNode(name, rhs));
+        } else {
+            int frameSlot = addLocalVarDef(lident);
+            if (rhs != null)
+              addLocalVarInitializer(frameSlot, rhs);
+        }
+    }
+
+    private int addLocalVarDef(Token varNameToken) {
+        TruffleString name = TruffleString.fromJavaStringUncached(varNameToken.getText(), TruffleString.Encoding.US_ASCII);
+        if (frame.currentScope.find(name) != null)
+            throw new LamaParseError(source, varNameToken.getLine(), varNameToken.getCharPositionInLine(), 1, String.format("cannot redefine %s", name));
+        int slot = frame.frameDescriptorBuilder.addSlot(FrameSlotKind.Illegal, name, null);
+        frame.currentScope.locals.put(name, slot);
         return slot;
     }
 
-    public void addVarInitializer(int frameSlot, ExprNode value) {
-        currentScope.initializers.add(new AssnNode(new LocalVarRefNode(frameSlot), value));
+    private void addLocalVarInitializer(int frameSlot, ExprNode value) {
+        frame.currentScope.prolog.add(new LocalVarAssnNode(new LocalVarRefNode(frameSlot), value));
     }
 
     public ScopeExprNode finishScope(ExprNode body, boolean popScope) {
         if (body == null)
             body = new SkipNode();
-        Collections.reverse(currentScope.initializers);
-        for (AssnNode init : currentScope.initializers) {
-            body = new SeqNode(init, body);
-        }
+        Collections.reverse(frame.currentScope.prolog);
+        for (var expr : frame.currentScope.prolog)
+            body = new SeqNode(expr, body);
         ScopeExprNode result = new ScopeExprNode(null, body);
         if (popScope)
-          popScope();
+            popScope();
         return result;
     }
 
     public void popScope() {
-        assert currentScope != null;
-        currentScope = currentScope.outer;
+        assert frame.currentScope != null;
+        frame.currentScope = frame.currentScope.outer;
     }
 
     /* parsing scope end */
@@ -122,26 +190,35 @@ public class LamaNodeFactory {
             }
             default -> {
                 assert innerText.length() == 1;
-                return new LongLiteralNode((int)innerText.charAt(0));
+                return new LongLiteralNode((int) innerText.charAt(0));
             }
         }
     }
 
-    public LocalVarRefNode createLocalVarRef(Token varNameToken) {
-        String varName = varNameToken.getText();
-        Integer frameSlot = currentScope.find(TruffleString.fromJavaStringUncached(varName, TruffleString.Encoding.US_ASCII));
+    public ExprNode createVarRef(Token lident) {
+        String varName = lident.getText();
+        Integer frameSlot = frame.currentScope.find(TruffleString.fromJavaStringUncached(varName, TruffleString.Encoding.US_ASCII));
         if (frameSlot == null) {
-            throw new LamaParseError(source, varNameToken.getLine(), varNameToken.getCharPositionInLine(), 1, String.format("failed to resolve %s", varName));
+            return new GlobalRefNode(varName);
+        } else {
+            return new LocalVarRefNode(frameSlot);
         }
-        return new LocalVarRefNode(frameSlot);
     }
 
-    public AssnNode createAssn(ExprNode lhs, ExprNode rhs) {
-        return new AssnNode((LocalVarRefNode) lhs, rhs);
+    public ExprNode createAssn(ExprNode lhs, ExprNode rhs) {
+        if (lhs instanceof GlobalRefNode globalRefNode)
+            return new GlobalAssnNode(globalRefNode.getName(), rhs);
+        if (lhs instanceof LocalVarRefNode localVarRefNode)
+            return new LocalVarAssnNode(localVarRefNode, rhs);
+        throw new IllegalStateException("wrong lhs in createAssn");
     }
 
-    public VarReadNode createVarRead(LocalVarRefNode var) {
-        return new VarReadNode(var);
+    public ExprNode createVarRead(ExprNode refNode) {
+        if (refNode instanceof GlobalRefNode globalRefNode)
+            return new GlobalReadNode(globalRefNode.getName());
+        if (refNode instanceof LocalVarRefNode localVarRefNode)
+            return new LocalVarReadNode(localVarRefNode);
+        throw new IllegalStateException("wrong refNode in createVarRead");
     }
 
     public ExprNode createBinary(Token opToken, ExprNode lhs, ExprNode rhs) {

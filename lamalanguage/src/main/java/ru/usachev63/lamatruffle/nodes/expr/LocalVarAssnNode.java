@@ -3,13 +3,13 @@ package ru.usachev63.lamatruffle.nodes.expr;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import ru.usachev63.lamatruffle.nodes.LocalVarRefNode;
 
-public final class AssnNode extends ExprNode {
+public final class LocalVarAssnNode extends ExprNode {
     @Child
     LocalVarRefNode lhs;
     @Child
     ExprNode rhs;
 
-    public AssnNode(LocalVarRefNode lhs, ExprNode rhs) {
+    public LocalVarAssnNode(LocalVarRefNode lhs, ExprNode rhs) {
         this.lhs = lhs;
         this.rhs = rhs;
     }
