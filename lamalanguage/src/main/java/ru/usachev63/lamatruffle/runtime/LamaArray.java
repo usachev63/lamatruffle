@@ -8,4 +8,6 @@ public final class LamaArray implements TruffleObject {
     public LamaArray(Object[] elements) {
         this.elements = elements;
     }
+
+    public record ElemDescriptor(LamaArray array, int index) {}
 }
