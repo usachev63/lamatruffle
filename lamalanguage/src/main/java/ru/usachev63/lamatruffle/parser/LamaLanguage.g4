@@ -460,9 +460,17 @@ wildcardPattern returns [PatternNode result]
 
 sexpPattern returns [PatternNode result]
 :
-  UIDENT {
-    $result = factory.createSexpPattern($UIDENT);
-  }
+  { List<PatternNode> subpatterns = new ArrayList<>(); }
+  UIDENT
+  (
+    '('
+    pattern { subpatterns.add($pattern.result); }
+    (
+      ',' pattern { subpatterns.add($pattern.result); }
+    )*
+    ')'
+  )?
+  { $result = factory.createSexpPattern($UIDENT, subpatterns); }
 ;
 
 // lexer
