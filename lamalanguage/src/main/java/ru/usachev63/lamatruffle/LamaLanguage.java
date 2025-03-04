@@ -38,6 +38,11 @@ public final class LamaLanguage extends TruffleLanguage<LamaContext> {
             "read",
             ReadBuiltinNodeFactory.getInstance()
         );
+        defineBuiltInFunction(
+            context,
+            "length",
+            LengthBuiltinNodeFactory.getInstance()
+        );
     }
 
     private void defineBuiltInFunction(LamaContext context, String name,
