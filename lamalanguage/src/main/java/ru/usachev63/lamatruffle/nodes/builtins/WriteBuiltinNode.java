@@ -1,28 +1,13 @@
 package ru.usachev63.lamatruffle.nodes.builtins;
 
-import com.oracle.truffle.api.frame.VirtualFrame;
-import com.oracle.truffle.api.nodes.UnexpectedResultException;
-import ru.usachev63.lamatruffle.nodes.expr.ExprNode;
+import com.oracle.truffle.api.dsl.Specialization;
 import ru.usachev63.lamatruffle.runtime.LamaContext;
 
-public class WriteBuiltinNode extends ExprNode {
-    @Child
-    ExprNode argumentNode;
-
-    public WriteBuiltinNode(ExprNode argumentNode) {
-        this.argumentNode = argumentNode;
-    }
-
-    @Override
-    public long executeLong(VirtualFrame frame) {
+public abstract class WriteBuiltinNode extends LamaBuiltinBodyNode {
+    @Specialization
+    public long write(long argument) {
         var context = LamaContext.get(this);
-        long argument = argumentNode.executeLong(frame);
         context.getOutput().println(argument);
         return 0;
-    }
-
-    @Override
-    public Object executeGeneric(VirtualFrame frame) {
-        return executeLong(frame);
     }
 }

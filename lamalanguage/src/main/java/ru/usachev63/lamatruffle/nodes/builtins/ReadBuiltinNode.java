@@ -1,14 +1,13 @@
 package ru.usachev63.lamatruffle.nodes.builtins;
 
-import com.oracle.truffle.api.frame.VirtualFrame;
-import ru.usachev63.lamatruffle.nodes.expr.ExprNode;
+import com.oracle.truffle.api.dsl.Specialization;
 import ru.usachev63.lamatruffle.runtime.LamaContext;
 
 import java.io.IOException;
 
-public class ReadBuiltinNode extends ExprNode {
-    @Override
-    public long executeLong(VirtualFrame frame) {
+public abstract class ReadBuiltinNode extends LamaBuiltinBodyNode {
+    @Specialization
+    public long read() {
         var context = LamaContext.get(this);
         var output = context.getOutput();
         output.print("> ");
@@ -19,10 +18,5 @@ public class ReadBuiltinNode extends ExprNode {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-    }
-
-    @Override
-    public Object executeGeneric(VirtualFrame frame) {
-        return executeLong(frame);
     }
 }

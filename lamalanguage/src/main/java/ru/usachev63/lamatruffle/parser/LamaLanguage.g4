@@ -217,14 +217,6 @@ postfixExpression[Attr attr] returns [ExprNode result]
 :
   primary[attr] { $result = $primary.result; }
 | {$attr != Attr.REF}?
-  'write' '(' arg=expression[attr.VAL] ')' {
-    $result = new WriteBuiltinNode($arg.result);
-  }
-| {$attr != Attr.REF}?
-  'read' '(' ')' {
-    $result = new ReadBuiltinNode();
-  }
-| {$attr != Attr.REF}?
   callee=varRef[Attr.VAL] { List<ExprNode> argumentNodes = new ArrayList<>(); }
   '('
     (
