@@ -437,8 +437,9 @@ caseBranches[Attr attr] returns [List<CaseNode.Branch> result]
 
 caseBranch[Attr attr] returns [CaseNode.Branch result]
 :
-  pattern '->' scopeExpression[attr, true] {
-    $result = new CaseNode.Branch($pattern.result, $scopeExpression.result);
+  { factory.startScope(); }
+  pattern '->' outcome=scopeExpressionNoStart[attr, true] {
+    $result = new CaseNode.Branch($pattern.result, $outcome.result);
   }
 ;
 
@@ -451,6 +452,7 @@ simplePattern returns [PatternNode result]
 :
   wildcardPattern { $result = $wildcardPattern.result; }
 | sexpPattern { $result = $sexpPattern.result; }
+| bindingPattern { $result = $bindingPattern.result; }
 ;
 
 wildcardPattern returns [PatternNode result]
@@ -471,6 +473,13 @@ sexpPattern returns [PatternNode result]
     ')'
   )?
   { $result = factory.createSexpPattern($UIDENT, subpatterns); }
+;
+
+bindingPattern returns [PatternNode result]
+:
+  LIDENT ( '@' pattern )? {
+    $result = factory.createBindingPattern($LIDENT, $pattern.ctx != null ? $pattern.result : null);
+  }
 ;
 
 // lexer

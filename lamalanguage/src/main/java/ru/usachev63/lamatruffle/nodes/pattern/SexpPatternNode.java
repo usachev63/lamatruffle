@@ -1,5 +1,6 @@
 package ru.usachev63.lamatruffle.nodes.pattern;
 
+import com.oracle.truffle.api.frame.VirtualFrame;
 import ru.usachev63.lamatruffle.runtime.LamaSexp;
 
 public final class SexpPatternNode extends PatternNode {
@@ -13,14 +14,14 @@ public final class SexpPatternNode extends PatternNode {
     }
 
     @Override
-    public boolean isMatchedBy(Object value) {
+    public boolean isMatchedBy(Object value, VirtualFrame frame) {
         if (value instanceof LamaSexp sexp) {
             if (sexp.elements.length != subpatterns.length)
                 return false;
             if (!sexp.uident.equals(uident))
                 return false;
             for (int i = 0; i < subpatterns.length; ++i)
-                if (!subpatterns[i].isMatchedBy(sexp.elements[i]))
+                if (!subpatterns[i].isMatchedBy(sexp.elements[i], frame))
                     return false;
             return true;
         }

@@ -32,7 +32,7 @@ public class CaseNode extends ExprNode {
     public Object executeGeneric(VirtualFrame frame) {
         Object scrutinee = scrutineeNode.executeGeneric(frame);
         for (Branch branch : branches) {
-            if (branch.patternNode.isMatchedBy(scrutinee)) {
+            if (branch.patternNode.isMatchedBy(scrutinee, frame)) {
                 return branch.outcomeNode.executeGeneric(frame);
             }
         }
