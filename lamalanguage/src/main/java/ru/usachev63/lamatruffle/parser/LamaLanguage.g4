@@ -281,6 +281,9 @@ primary[Attr attr] returns [ExprNode result]
 |
   '(' scopeExpression[attr, true] ')' { $result = $scopeExpression.result; }
 |
+  {$attr != Attr.REF}?
+  arrayExpression { $result = $arrayExpression.result; }
+|
   ifExpression[attr] { $result = $ifExpression.result; }
 |
   {$attr == Attr.VOID}?
@@ -322,6 +325,20 @@ varRef[Attr attr] returns [ExprNode result]
     else
       $result = factory.createVarRead(refNode);
   }
+;
+
+arrayExpression returns [ArrayExprNode result]
+:
+  { List<ExprNode> elements = new ArrayList<>(); }
+  '['
+    (
+      expression[Attr.VAL] { elements.add($expression.result); }
+      (
+        ',' expression[Attr.VAL] { elements.add($expression.result); }
+      )*
+    )?
+  ']'
+  { $result = factory.createArrayExpr(elements); }
 ;
 
 ifExpression[Attr attr] returns [ExprNode result]

@@ -253,6 +253,10 @@ public class LamaNodeFactory {
         };
     }
 
+    public ArrayExprNode createArrayExpr(List<ExprNode> elements) {
+        return new ArrayExprNode(elements.toArray(new ExprNode[0]));
+    }
+
     public ExprNode createWhile(ExprNode conditionNode, ExprNode bodyNode) {
         return new WhileNode(conditionNode, bodyNode);
     }
