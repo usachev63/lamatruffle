@@ -216,22 +216,24 @@ binaryOperand[Attr attr] returns [ExprNode result]
 postfixExpression[Attr attr] returns [ExprNode result]
 :
   primary[attr] { $result = $primary.result; }
-| {$attr == Attr.REF}?
+|
   primary[Attr.VAL] { $result = $primary.result; }
   (
-    '[' index=expression[Attr.VAL] ']' {
-      $result = factory.createElemRef($result, $index.result);
-    }
-  )+
+    postfixItem[$result, Attr.VAL] { $result = $postfixItem.result; }
+  )*
+  postfixItem[$result, attr] { $result = $postfixItem.result; }
+;
+
+postfixItem[ExprNode base, Attr attr] returns [ExprNode result]
+:
+  '[' index=expression[Attr.VAL] ']' {
+    if ($attr == Attr.REF)
+      $result = factory.createElemRef($base, $index.result);
+    else
+      $result = factory.createElemRead($base, $index.result);
+  }
 | {$attr != Attr.REF}?
-  primary[Attr.VAL] { $result = $primary.result; }
-  (
-    '[' index=expression[Attr.VAL] ']' {
-      $result = factory.createElemRead($result, $index.result);
-    }
-  )+
-| {$attr != Attr.REF}?
-  callee=varRef[Attr.VAL] { List<ExprNode> argumentNodes = new ArrayList<>(); }
+  { List<ExprNode> argumentNodes = new ArrayList<>(); }
   '('
     (
       expression[Attr.VAL] { argumentNodes.add($expression.result); }
@@ -241,11 +243,10 @@ postfixExpression[Attr attr] returns [ExprNode result]
       )*
     )?
   ')' {
-    $result = factory.createCallExpr($callee.result, argumentNodes);
+    $result = factory.createCallExpr($base, argumentNodes);
   }
 | {$attr != Attr.REF}?
-  { List<ExprNode> argumentNodes = new ArrayList<>(); }
-  argument1=primary[Attr.VAL] { argumentNodes.add($argument1.result); }
+  { List<ExprNode> argumentNodes = new ArrayList<>(); argumentNodes.add($base); }
   '.' callee=varRef[Attr.VAL]
   (
     '('
