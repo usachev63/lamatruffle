@@ -229,6 +229,18 @@ postfixExpression[Attr attr] returns [ExprNode result]
   ')' {
     $result = factory.createCallExpr($callee.result, argumentNodes);
   }
+| {$attr != Attr.REF}?
+  { List<ExprNode> argumentNodes = new ArrayList<>(); }
+  argument1=primary[Attr.VAL] { argumentNodes.add($argument1.result); }
+  '.' callee=varRef[Attr.VAL]
+  (
+    '('
+      expression[Attr.VAL] { argumentNodes.add($expression.result); }
+      ( ',' expression[Attr.VAL] { argumentNodes.add($expression.result); } )*
+    ')'
+  )? {
+    $result = factory.createCallExpr($callee.result, argumentNodes);
+  }
 ;
 
 primary[Attr attr] returns [ExprNode result]
