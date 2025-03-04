@@ -14,6 +14,7 @@ import ru.usachev63.lamatruffle.nodes.*;
 import ru.usachev63.lamatruffle.nodes.expr.*;
 import ru.usachev63.lamatruffle.nodes.expr.numeric.*;
 import ru.usachev63.lamatruffle.nodes.builtins.*;
+import ru.usachev63.lamatruffle.nodes.pattern.*;
 }
 
 @parser::members
@@ -298,6 +299,8 @@ primary[Attr attr] returns [ExprNode result]
 |
   {$attr == Attr.VOID}?
   forExpression { $result = $forExpression.result; }
+|
+  caseExpression[attr] { $result = $caseExpression.result; }
 ;
 
 const_ returns [LongLiteralNode result]
@@ -413,6 +416,46 @@ forExpression returns [ExprNode result]
         new SeqNode($body.result, $incr.result)
       )
     );
+  }
+;
+
+caseExpression[Attr attr] returns [CaseNode result]
+:
+  'case' scrutinee=expression[Attr.VAL] 'of' caseBranches[attr] 'esac' {
+    $result = factory.createCase($scrutinee.result, $caseBranches.result);
+  }
+;
+
+caseBranches[Attr attr] returns [List<CaseNode.Branch> result]
+:
+  { $result = new ArrayList<CaseNode.Branch>(); }
+  caseBranch[attr] { $result.add($caseBranch.result); }
+  (
+    '|' caseBranch[attr] { $result.add($caseBranch.result); }
+  )*
+;
+
+caseBranch[Attr attr] returns [CaseNode.Branch result]
+:
+  pattern '->' scopeExpression[attr, true] {
+    $result = new CaseNode.Branch($pattern.result, $scopeExpression.result);
+  }
+;
+
+pattern returns [PatternNode result]
+:
+  simplePattern { $result = $simplePattern.result; }
+;
+
+simplePattern returns [PatternNode result]
+:
+  sexpPattern { $result = $sexpPattern.result; }
+;
+
+sexpPattern returns [PatternNode result]
+:
+  UIDENT {
+    $result = factory.createSexpPattern($UIDENT);
   }
 ;
 

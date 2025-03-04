@@ -10,6 +10,8 @@ import ru.usachev63.lamatruffle.LamaLanguage;
 import ru.usachev63.lamatruffle.nodes.*;
 import ru.usachev63.lamatruffle.nodes.expr.*;
 import ru.usachev63.lamatruffle.nodes.expr.numeric.*;
+import ru.usachev63.lamatruffle.nodes.pattern.PatternNode;
+import ru.usachev63.lamatruffle.nodes.pattern.SexpPatternNode;
 
 import java.util.*;
 
@@ -273,5 +275,13 @@ public class LamaNodeFactory {
             currentNode = new IfNode(ifThenEntry.conditionNode, ifThenEntry.bodyNode, currentNode);
         }
         return currentNode;
+    }
+
+    public CaseNode createCase(ExprNode scrutineeNode, List<CaseNode.Branch> branches) {
+        return new CaseNode(scrutineeNode, branches.toArray(new CaseNode.Branch[0]));
+    }
+
+    public SexpPatternNode createSexpPattern(Token uident) {
+        return new SexpPatternNode(uident.getText());
     }
 }
