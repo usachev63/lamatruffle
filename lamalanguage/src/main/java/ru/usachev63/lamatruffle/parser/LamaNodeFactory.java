@@ -123,11 +123,11 @@ public class LamaNodeFactory {
         if (isGlobalScope()) {
             frame.currentScope.prolog.add(new GlobalDefNode(name));
             if (rhs != null)
-              frame.currentScope.prolog.add(new GlobalAssnNode(name, rhs));
+                frame.currentScope.prolog.add(new GlobalAssnNode(name, rhs));
         } else {
             int frameSlot = addLocalVarDef(lident);
             if (rhs != null)
-              addLocalVarInitializer(frameSlot, rhs);
+                addLocalVarInitializer(frameSlot, rhs);
         }
     }
 
@@ -255,6 +255,10 @@ public class LamaNodeFactory {
 
     public ArrayExprNode createArrayExpr(List<ExprNode> elements) {
         return new ArrayExprNode(elements.toArray(new ExprNode[0]));
+    }
+
+    public SexpNode createSexp(Token uidentToken, List<ExprNode> elementNodes) {
+        return new SexpNode(uidentToken.getText(), elementNodes.toArray(new ExprNode[0]));
     }
 
     public ExprNode createWhile(ExprNode conditionNode, ExprNode bodyNode) {

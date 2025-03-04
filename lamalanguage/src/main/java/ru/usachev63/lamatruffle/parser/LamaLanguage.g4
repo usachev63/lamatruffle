@@ -285,6 +285,9 @@ primary[Attr attr] returns [ExprNode result]
   {$attr != Attr.REF}?
   arrayExpression { $result = $arrayExpression.result; }
 |
+  {$attr != Attr.REF}?
+  sExpression { $result = $sExpression.result; }
+|
   ifExpression[attr] { $result = $ifExpression.result; }
 |
   {$attr == Attr.VOID}?
@@ -340,6 +343,21 @@ arrayExpression returns [ArrayExprNode result]
     )?
   ']'
   { $result = factory.createArrayExpr(elements); }
+;
+
+sExpression returns [SexpNode result]
+:
+  { List<ExprNode> elementNodes = new ArrayList<>(); }
+  UIDENT
+  (
+   '('
+     expression[Attr.VAL] { elementNodes.add($expression.result); }
+     (
+       ',' expression[Attr.VAL] { elementNodes.add($expression.result); }
+     )*
+   ')'
+  )?
+  { $result = factory.createSexp($UIDENT, elementNodes); }
 ;
 
 ifExpression[Attr attr] returns [ExprNode result]
