@@ -449,7 +449,13 @@ pattern returns [PatternNode result]
 
 simplePattern returns [PatternNode result]
 :
-  sexpPattern { $result = $sexpPattern.result; }
+  wildcardPattern { $result = $wildcardPattern.result; }
+| sexpPattern { $result = $sexpPattern.result; }
+;
+
+wildcardPattern returns [PatternNode result]
+:
+  '_' { $result = new WildcardPatternNode(); }
 ;
 
 sexpPattern returns [PatternNode result]
