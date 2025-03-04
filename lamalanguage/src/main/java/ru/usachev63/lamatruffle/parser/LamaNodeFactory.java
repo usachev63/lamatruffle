@@ -2,6 +2,7 @@ package ru.usachev63.lamatruffle.parser;
 
 import com.oracle.truffle.api.frame.FrameDescriptor;
 import com.oracle.truffle.api.frame.FrameSlotKind;
+import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.source.Source;
 import com.oracle.truffle.api.strings.TruffleString;
 import org.antlr.v4.runtime.Token;
@@ -167,7 +168,7 @@ public class LamaNodeFactory {
     }
 
     public StringLiteralNode createStringLiteral(Token literalToken) {
-        return new StringLiteralNode(TruffleString.fromJavaStringUncached(stringLiteralValueOf(literalToken.getText()), TruffleString.Encoding.US_ASCII));
+        return new StringLiteralNode(stringLiteralValueOf(literalToken.getText()));
     }
 
     private String stringLiteralValueOf(String rawText) {
@@ -208,11 +209,17 @@ public class LamaNodeFactory {
         }
     }
 
+    public ElemRefNode createElemRef(ExprNode base, ExprNode index) {
+        return ElemRefNodeGen.create(base, index);
+    }
+
     public ExprNode createAssn(ExprNode lhs, ExprNode rhs) {
         if (lhs instanceof GlobalRefNode globalRefNode)
             return new GlobalAssnNode(globalRefNode.getName(), rhs);
         if (lhs instanceof LocalVarRefNode localVarRefNode)
             return new LocalVarAssnNode(localVarRefNode, rhs);
+        if (lhs instanceof ElemRefNode elemRefNode)
+            return ElemAssnNodeGen.create(elemRefNode, rhs);
         throw new IllegalStateException("wrong lhs in createAssn");
     }
 
@@ -222,6 +229,10 @@ public class LamaNodeFactory {
         if (refNode instanceof LocalVarRefNode localVarRefNode)
             return new LocalVarReadNode(localVarRefNode);
         throw new IllegalStateException("wrong refNode in createVarRead");
+    }
+
+    public ElemReadNode createElemRead(ExprNode container, ExprNode index) {
+        return ElemReadNodeGen.create(createElemRef(container, index));
     }
 
     public ExprNode createBinary(Token opToken, ExprNode lhs, ExprNode rhs) {

@@ -150,7 +150,7 @@ basicExpression[Attr attr] returns [ExprNode result]
 maybeAssignment[Attr attr] returns [ExprNode result]
 :
   {$attr != Attr.REF}?
-  lhs=varRef[Attr.REF] ':=' rhs=maybeAssignment[Attr.VAL] {
+  lhs=maybeConjunction[Attr.REF] ':=' rhs=maybeAssignment[Attr.VAL] {
     $result = factory.createAssn($lhs.result, $rhs.result);
   }
 |
@@ -216,6 +216,20 @@ binaryOperand[Attr attr] returns [ExprNode result]
 postfixExpression[Attr attr] returns [ExprNode result]
 :
   primary[attr] { $result = $primary.result; }
+| {$attr == Attr.REF}?
+  primary[Attr.VAL] { $result = $primary.result; }
+  (
+    '[' index=expression[Attr.VAL] ']' {
+      $result = factory.createElemRef($result, $index.result);
+    }
+  )+
+| {$attr != Attr.REF}?
+  primary[Attr.VAL] { $result = $primary.result; }
+  (
+    '[' index=expression[Attr.VAL] ']' {
+      $result = factory.createElemRead($result, $index.result);
+    }
+  )+
 | {$attr != Attr.REF}?
   callee=varRef[Attr.VAL] { List<ExprNode> argumentNodes = new ArrayList<>(); }
   '('
