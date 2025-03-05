@@ -261,6 +261,14 @@ public class LamaNodeFactory {
         return new ArrayExprNode(elements.toArray(new ExprNode[0]));
     }
 
+    public ExprNode createListExpr(List<ExprNode> elements) {
+        ExprNode result = new LongLiteralNode(0);
+        Collections.reverse(elements);
+        for (ExprNode element : elements)
+            result = new SexpNode("cons", new ExprNode[]{element, result});
+        return result;
+    }
+
     public SexpNode createSexp(Token uidentToken, List<ExprNode> elementNodes) {
         return new SexpNode(uidentToken.getText(), elementNodes.toArray(new ExprNode[0]));
     }

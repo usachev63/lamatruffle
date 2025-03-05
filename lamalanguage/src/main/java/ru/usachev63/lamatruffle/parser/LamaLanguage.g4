@@ -296,6 +296,9 @@ primary[Attr attr] returns [ExprNode result]
   '(' scopeExpression[attr, true] ')' { $result = $scopeExpression.result; }
 |
   {$attr != Attr.REF}?
+  listExpression { $result = $listExpression.result; }
+|
+  {$attr != Attr.REF}?
   arrayExpression { $result = $arrayExpression.result; }
 |
   {$attr != Attr.REF}?
@@ -358,6 +361,20 @@ arrayExpression returns [ArrayExprNode result]
     )?
   ']'
   { $result = factory.createArrayExpr(elements); }
+;
+
+listExpression returns [ExprNode result]
+:
+  { List<ExprNode> elements = new ArrayList<>(); }
+  '{'
+    (
+      expression[Attr.VAL] { elements.add($expression.result); }
+      (
+        ',' expression[Attr.VAL] { elements.add($expression.result); }
+      )*
+    )?
+  '}'
+  { $result = factory.createListExpr(elements); }
 ;
 
 sExpression returns [SexpNode result]
