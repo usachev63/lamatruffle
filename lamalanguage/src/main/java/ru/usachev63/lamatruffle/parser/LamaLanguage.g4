@@ -151,17 +151,29 @@ basicExpression[Attr attr] returns [ExprNode result]
 maybeAssignment[Attr attr] returns [ExprNode result]
 :
   {$attr != Attr.REF}?
-  lhs=maybeConjunction[Attr.REF] ':=' rhs=maybeAssignment[Attr.VAL] {
+  lhs=maybeDisjunction[Attr.REF] ':=' rhs=maybeAssignment[Attr.VAL] {
     $result = factory.createAssn($lhs.result, $rhs.result);
   }
 |
+  maybeDisjunction[attr] { $result = $maybeDisjunction.result; }
+;
+
+maybeDisjunction[Attr attr] returns [ExprNode result]
+:
   maybeConjunction[attr] { $result = $maybeConjunction.result; }
+| {$attr != Attr.REF}?
+  maybeConjunction[Attr.VAL] { $result = $maybeConjunction.result; }
+  (
+    op='!!' rhs=maybeConjunction[Attr.VAL] {
+      $result = factory.createBinary($op, $result, $rhs.result);
+    }
+  )+
 ;
 
 maybeConjunction[Attr attr] returns [ExprNode result]
 :
   maybeCmp[attr] { $result = $maybeCmp.result; }
-|
+| {$attr != Attr.REF}?
   maybeCmp[Attr.VAL] { $result = $maybeCmp.result; }
   (
     op='&&' rhs=maybeCmp[Attr.VAL] {

@@ -13,19 +13,13 @@ import ru.usachev63.lamatruffle.runtime.LamaString;
 @NodeChild(value = "lhsNode", type = ExprNode.class)
 @NodeChild(value = "rhsNode", type = ExprNode.class)
 public abstract class IndirectAssnNode extends ExprNode {
-    protected abstract ExprNode getLhsNode();
-
-    @Specialization(guards = "isWithLocalVarRef()")
+    @Specialization
     protected Object assign(VirtualFrame frame, long frameSlot, Object rhs) {
         frame.setObject((int) frameSlot, rhs);
         return rhs;
     }
 
-    protected boolean isWithLocalVarRef() {
-        return getLhsNode() instanceof LocalVarRefNode;
-    }
-
-    @Specialization(guards = "isWithGlobalRef()")
+    @Specialization
     protected Object assign(String globalName, Object rhs) {
         boolean result = LamaContext
             .get(this)
@@ -34,10 +28,6 @@ public abstract class IndirectAssnNode extends ExprNode {
         if (!result)
             throw new RuntimeException("'" + globalName + "' ain't defined");
         return rhs;
-    }
-
-    protected boolean isWithGlobalRef() {
-        return getLhsNode() instanceof GlobalRefNode;
     }
 
     @Specialization
