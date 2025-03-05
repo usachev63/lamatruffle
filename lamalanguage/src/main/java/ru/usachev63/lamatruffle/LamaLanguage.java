@@ -43,6 +43,11 @@ public final class LamaLanguage extends TruffleLanguage<LamaContext> {
             "length",
             LengthBuiltinNodeFactory.getInstance()
         );
+        defineBuiltInFunction(
+            context,
+            "string",
+            StringBuiltinNodeFactory.getInstance()
+        );
     }
 
     private void defineBuiltInFunction(LamaContext context, String name,

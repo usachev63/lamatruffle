@@ -7,7 +7,7 @@ import ru.usachev63.lamatruffle.runtime.LamaString;
 public abstract class LengthBuiltinNode extends LamaBuiltinBodyNode {
     @Specialization
     protected long length(LamaString argument) {
-        return argument.length();
+        return argument.data.length;
     }
     @Specialization
     protected long length(LamaArray argument) {

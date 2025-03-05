@@ -10,7 +10,7 @@ import ru.usachev63.lamatruffle.runtime.LamaString;
 public abstract class ElemReadNode extends ExprNode {
     @Specialization
     protected long readStringElem(LamaString.ElemDescriptor descriptor) {
-        return descriptor.string().get((int)descriptor.index());
+        return descriptor.string().data[(int)descriptor.index()];
     }
     @Specialization
     protected Object readArrayElem(LamaArray.ElemDescriptor descriptor) {

@@ -11,9 +11,10 @@ import ru.usachev63.lamatruffle.runtime.LamaString;
 public abstract class ElemAssnNode extends ExprNode {
     @Specialization
     protected long assnStringElem(LamaString.ElemDescriptor descriptor, long rhs) {
-        descriptor.string().set((int)descriptor.index(), rhs);
+        descriptor.string().data[(int) descriptor.index()] = (char) rhs;
         return rhs;
     }
+
     @Specialization
     protected Object assnArrayElem(LamaArray.ElemDescriptor descriptor, Object rhs) {
         descriptor.array().elements[descriptor.index()] = rhs;
