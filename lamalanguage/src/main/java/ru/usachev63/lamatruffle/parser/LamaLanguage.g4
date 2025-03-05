@@ -484,7 +484,16 @@ caseBranch[Attr attr] returns [CaseNode.Branch result]
 
 pattern returns [PatternNode result]
 :
+  consPattern { $result = $consPattern.result; }
+|
   simplePattern { $result = $simplePattern.result; }
+;
+
+consPattern returns [PatternNode result]
+:
+  simplePattern ':' pattern {
+    $result = factory.createConsPattern($simplePattern.result, $pattern.result);
+  }
 ;
 
 simplePattern returns [PatternNode result]

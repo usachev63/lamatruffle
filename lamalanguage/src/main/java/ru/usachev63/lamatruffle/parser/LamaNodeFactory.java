@@ -295,6 +295,10 @@ public class LamaNodeFactory {
         return new CaseNode(scrutineeNode, branches.toArray(new CaseNode.Branch[0]));
     }
 
+    public SexpPatternNode createConsPattern(PatternNode head, PatternNode tail) {
+        return new SexpPatternNode("cons", new PatternNode[]{head, tail});
+    }
+
     public SexpPatternNode createSexpPattern(Token uident, List<PatternNode> subpatterns) {
         return new SexpPatternNode(uident.getText(), subpatterns.toArray(new PatternNode[0]));
     }
