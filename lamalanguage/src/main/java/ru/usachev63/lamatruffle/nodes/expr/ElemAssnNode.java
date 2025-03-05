@@ -4,6 +4,7 @@ import com.oracle.truffle.api.dsl.NodeChild;
 import com.oracle.truffle.api.dsl.Specialization;
 import ru.usachev63.lamatruffle.nodes.ElemRefNode;
 import ru.usachev63.lamatruffle.runtime.LamaArray;
+import ru.usachev63.lamatruffle.runtime.LamaSexp;
 import ru.usachev63.lamatruffle.runtime.LamaString;
 
 @NodeChild(value = "elemRefNode", type = ElemRefNode.class)
@@ -14,10 +15,14 @@ public abstract class ElemAssnNode extends ExprNode {
         descriptor.string().data[(int) descriptor.index()] = (char) rhs;
         return rhs;
     }
-
     @Specialization
     protected Object assnArrayElem(LamaArray.ElemDescriptor descriptor, Object rhs) {
         descriptor.array().elements[descriptor.index()] = rhs;
+        return rhs;
+    }
+    @Specialization
+    protected Object assnSexpElem(LamaSexp.ElemDescriptor descriptor, Object rhs) {
+        descriptor.sexp().elements[descriptor.index()] = rhs;
         return rhs;
     }
 }

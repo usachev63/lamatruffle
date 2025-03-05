@@ -10,4 +10,6 @@ public class LamaSexp implements TruffleObject {
         this.uident = uident;
         this.elements = elements;
     }
+
+    public record ElemDescriptor(LamaSexp sexp, int index) {}
 }
