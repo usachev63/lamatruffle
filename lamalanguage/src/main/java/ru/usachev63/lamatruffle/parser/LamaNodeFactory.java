@@ -238,6 +238,10 @@ public class LamaNodeFactory {
         return ElemReadNodeGen.create(createElemRef(container, index));
     }
 
+    public SexpNode createCons(ExprNode lhs, ExprNode rhs) {
+        return new SexpNode("cons", new ExprNode[]{lhs, rhs});
+    }
+
     public ExprNode createBinary(Token opToken, ExprNode lhs, ExprNode rhs) {
         return switch (opToken.getText()) {
             case "!!" -> DisjunctionNodeGen.create(lhs, rhs);

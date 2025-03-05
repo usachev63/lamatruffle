@@ -151,8 +151,18 @@ basicExpression[Attr attr] returns [ExprNode result]
 maybeAssignment[Attr attr] returns [ExprNode result]
 :
   {$attr != Attr.REF}?
-  lhs=maybeDisjunction[Attr.REF] ':=' rhs=maybeAssignment[Attr.VAL] {
+  lhs=maybeCons[Attr.REF] ':=' rhs=maybeAssignment[Attr.VAL] {
     $result = factory.createAssn($lhs.result, $rhs.result);
+  }
+|
+  maybeCons[attr] { $result = $maybeCons.result; }
+;
+
+maybeCons[Attr attr] returns [ExprNode result]
+:
+  {$attr != Attr.REF}?
+  head=maybeDisjunction[Attr.VAL] ':' tail=maybeCons[Attr.VAL] {
+    $result = factory.createCons($head.result, $tail.result);
   }
 |
   maybeDisjunction[attr] { $result = $maybeDisjunction.result; }
