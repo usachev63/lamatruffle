@@ -223,7 +223,7 @@ public class LamaNodeFactory {
             return new LocalVarAssnNode(localVarRefNode, rhs);
         if (lhs instanceof ElemRefNode elemRefNode)
             return ElemAssnNodeGen.create(elemRefNode, rhs);
-        throw new IllegalStateException("wrong lhs in createAssn");
+        return IndirectAssnNodeGen.create(lhs, rhs);
     }
 
     public ExprNode createVarRead(ExprNode refNode) {
