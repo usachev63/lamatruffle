@@ -330,11 +330,8 @@ primary[Attr attr] returns [ExprNode result]
 
 const_ returns [LongLiteralNode result]
 :
-  minus='-'? DECIMAL {
-    long value = Long.parseLong($DECIMAL.getText());
-    if ($minus != null)
-      value = -value;
-    $result = new LongLiteralNode(value);
+  longLiteral {
+    $result = new LongLiteralNode($longLiteral.result);
   }
 ;
 
@@ -500,7 +497,9 @@ simplePattern returns [PatternNode result]
 :
   wildcardPattern { $result = $wildcardPattern.result; }
 | sexpPattern { $result = $sexpPattern.result; }
+| listPattern { $result = $listPattern.result; }
 | bindingPattern { $result = $bindingPattern.result; }
+| longLiteralPattern { $result = $longLiteralPattern.result; }
 ;
 
 wildcardPattern returns [PatternNode result]
@@ -523,10 +522,40 @@ sexpPattern returns [PatternNode result]
   { $result = factory.createSexpPattern($UIDENT, subpatterns); }
 ;
 
+listPattern returns [PatternNode result]
+:
+  { List<PatternNode> subpatterns = new ArrayList<>(); }
+  '{'
+    (
+      pattern { subpatterns.add($pattern.result); }
+      (
+        ',' pattern { subpatterns.add($pattern.result); }
+      )*
+    )?
+  '}'
+  { $result = factory.createListPattern(subpatterns); }
+;
+
 bindingPattern returns [PatternNode result]
 :
   LIDENT ( '@' pattern )? {
     $result = factory.createBindingPattern($LIDENT, $pattern.ctx != null ? $pattern.result : null);
+  }
+;
+
+longLiteralPattern returns [PatternNode result]
+:
+  longLiteral {
+    $result = new LongLiteralPatternNode($longLiteral.result);
+  }
+;
+
+longLiteral returns [long result]
+:
+  minus='-'? DECIMAL {
+    $result = Long.parseLong($DECIMAL.getText());
+    if ($minus != null)
+      $result = -$result;
   }
 ;
 

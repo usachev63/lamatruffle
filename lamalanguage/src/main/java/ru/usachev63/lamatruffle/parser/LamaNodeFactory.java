@@ -11,6 +11,7 @@ import ru.usachev63.lamatruffle.nodes.*;
 import ru.usachev63.lamatruffle.nodes.expr.*;
 import ru.usachev63.lamatruffle.nodes.expr.numeric.*;
 import ru.usachev63.lamatruffle.nodes.pattern.BindingPattern;
+import ru.usachev63.lamatruffle.nodes.pattern.LongLiteralPatternNode;
 import ru.usachev63.lamatruffle.nodes.pattern.PatternNode;
 import ru.usachev63.lamatruffle.nodes.pattern.SexpPatternNode;
 
@@ -301,6 +302,14 @@ public class LamaNodeFactory {
 
     public SexpPatternNode createSexpPattern(Token uident, List<PatternNode> subpatterns) {
         return new SexpPatternNode(uident.getText(), subpatterns.toArray(new PatternNode[0]));
+    }
+
+    public PatternNode createListPattern(List<PatternNode> subpatterns) {
+        PatternNode result = new LongLiteralPatternNode(0);
+        Collections.reverse(subpatterns);
+        for (PatternNode subpattern : subpatterns)
+            result = new SexpPatternNode("cons", new PatternNode[]{subpattern, result});
+        return result;
     }
 
     public BindingPattern createBindingPattern(Token lident, PatternNode subpattern) {
