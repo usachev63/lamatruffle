@@ -42,6 +42,7 @@ private static void throwParseError(Source source, int line, int charPositionInL
 public static RootCallTarget parseLama(LamaLanguage language, Source source) {
     LamaLanguageLexer lexer = new LamaLanguageLexer(CharStreams.fromString(source.getCharacters().toString()));
     LamaLanguageParser parser = new LamaLanguageParser(new CommonTokenStream(lexer));
+    parser.setBuildParseTree(false);
     lexer.removeErrorListeners();
     parser.removeErrorListeners();
     BailoutErrorListener listener = new BailoutErrorListener(source);
