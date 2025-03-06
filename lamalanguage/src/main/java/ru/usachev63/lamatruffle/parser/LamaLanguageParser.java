@@ -218,7 +218,9 @@ public class LamaLanguageParser extends Parser {
 			{
 			setState(94);
 			((LamaContext)_localctx).scopeExpression = scopeExpression(Attr.VOID, true);
-			 factory.createMain(((LamaContext)_localctx).scopeExpression.result); 
+
+			    factory.createMain(((LamaContext)_localctx).scopeExpression.result);
+			  
 			setState(96);
 			match(EOF);
 			}

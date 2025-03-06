@@ -75,7 +75,9 @@ public static class IfThenEntry {
 
 lama
 :
-  scopeExpression[Attr.VOID, true] { factory.createMain($scopeExpression.result); }
+  scopeExpression[Attr.VOID, true] {
+    factory.createMain($scopeExpression.result);
+  }
   EOF
 ;
 

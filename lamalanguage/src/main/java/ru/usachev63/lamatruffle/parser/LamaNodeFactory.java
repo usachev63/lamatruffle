@@ -167,7 +167,7 @@ public class LamaNodeFactory {
         Collections.reverse(frame.currentScope.prolog);
         for (var expr : frame.currentScope.prolog)
             body = new SeqNode(expr, body);
-        ScopeExprNode result = new ScopeExprNode(null, body);
+        ScopeExprNode result = new ScopeExprNode(body);
         if (popScope)
             popScope();
         return result;
