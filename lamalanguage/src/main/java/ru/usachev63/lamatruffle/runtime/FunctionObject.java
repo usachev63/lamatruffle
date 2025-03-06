@@ -27,21 +27,8 @@ public final class FunctionObject implements TruffleObject {
      */
     public final int argumentCount;
 
-    private final FunctionDispatchNode functionDispatchNode;
-
     public FunctionObject(CallTarget callTarget, int argumentCount) {
         this.callTarget = callTarget;
         this.argumentCount = argumentCount;
-        this.functionDispatchNode = FunctionDispatchNodeGen.create();
-    }
-
-    @ExportMessage
-    boolean isExecutable() {
-        return true;
-    }
-
-    @ExportMessage
-    Object execute(Object[] arguments) {
-        return this.functionDispatchNode.executeDispatch(this, arguments);
     }
 }
