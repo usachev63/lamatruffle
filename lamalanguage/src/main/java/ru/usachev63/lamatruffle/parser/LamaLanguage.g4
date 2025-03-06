@@ -127,7 +127,7 @@ functionDefinition
   }
   '(' functionParameters ')'
   '{' body=scopeExpressionNoStart[Attr.VOID, true] '}'
-  { factory.finishFrame($body.result); }
+  { factory.finishFuncDecl($body.result); }
 ;
 
 functionParameters : (functionParameter (',' functionParameter)*)?;
@@ -300,6 +300,9 @@ primary[Attr attr] returns [ExprNode result]
   {$attr != Attr.REF}?
   'false' { $result = new LongLiteralNode(0); }
 |
+  {$attr != Attr.REF}?
+  anonFunction { $result = $anonFunction.result; }
+|
   {$attr == Attr.VOID}?
   'skip' { $result = new SkipNode(); }
 |
@@ -354,6 +357,17 @@ varRef[Attr attr] returns [ExprNode result]
     else
       $result = factory.createVarRead(refNode);
   }
+;
+
+anonFunction returns [ExprNode result]
+:
+  'fun' {
+    factory.startAnonFrame();
+    factory.startScope();
+  }
+  '(' functionParameters ')'
+  '{' body=scopeExpressionNoStart[Attr.VOID, true] '}'
+  { factory.finishAnonFunction($body.result); }
 ;
 
 arrayExpression returns [ArrayExprNode result]

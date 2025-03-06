@@ -85,6 +85,8 @@ public class LamaNodeFactory {
         frame = new Frame(lident.getText(), frame);
     }
 
+    public void startAnonFrame() { frame = new Frame(null, frame); }
+
     public void addFormalParameter(Token lident) {
         int parameterIndex = frame.parameterCount++;
         int frameSlot = addLocalVarDef(lident);
@@ -95,10 +97,23 @@ public class LamaNodeFactory {
         frame.prolog.add(assn);
     }
 
-    public void finishFrame(ScopeExprNode body) {
+    public void finishFuncDecl(ScopeExprNode body) {
+        var frameAndRootNode = finishFrame(body);
+        var frame = frameAndRootNode.frame;
+        var rootNode = frameAndRootNode.rootNode;
+        this.frame.currentScope.prolog.add(new FuncDeclNode(frame.functionName, frame.parameterCount, rootNode));
+    }
+
+    public ExprNode finishAnonFunction(ScopeExprNode body) {
+        var frameAndRootNode = finishFrame(body);
+        return new AnonFunctionNode(frameAndRootNode.frame.parameterCount, frameAndRootNode.rootNode);
+    }
+
+    private record FrameAndRootNode(Frame frame, LamaRootNode rootNode) {}
+
+    private FrameAndRootNode finishFrame(ScopeExprNode body) {
         assert frame != null;
         String name = frame.functionName;
-        int parameterCount = frame.parameterCount;
         TruffleString nameTruffleString =
             TruffleString.fromJavaStringUncached(name, TruffleString.Encoding.UTF_8);
         Collections.reverse(frame.prolog);
@@ -112,8 +127,9 @@ public class LamaNodeFactory {
             null,
             nameTruffleString
         );
+        var result = new FrameAndRootNode(frame, rootNode);
         frame = frame.parent;
-        frame.currentScope.prolog.add(new FuncDeclNode(name, parameterCount, rootNode));
+        return result;
     }
 
     /* parsing scope begin */
