@@ -2067,7 +2067,7 @@ public class LamaLanguageParser extends Parser {
 			((AnonFunctionContext)_localctx).body = scopeExpressionNoStart(Attr.VOID, true);
 			setState(424);
 			match(T__8);
-			 factory.finishAnonFunction(((AnonFunctionContext)_localctx).body.result); 
+			 ((AnonFunctionContext)_localctx).result =  factory.finishAnonFunction(((AnonFunctionContext)_localctx).body.result); 
 			}
 		}
 		catch (RecognitionException re) {

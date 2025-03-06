@@ -84,7 +84,8 @@ public class LamaNodeFactory {
         frame = new Frame(lident.getText(), frame);
     }
 
-    public void startAnonFrame() { frame = new Frame(null, frame); }
+    private int anonFunctionCount = 1;
+    public void startAnonFrame() { frame = new Frame("anon" + (anonFunctionCount++), frame); }
 
     public void addFormalParameter(Token lident) {
         int parameterIndex = frame.parameterCount++;
