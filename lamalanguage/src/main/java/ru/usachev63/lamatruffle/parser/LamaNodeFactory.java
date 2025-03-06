@@ -153,7 +153,7 @@ public class LamaNodeFactory {
 
     private int addLocalVarDef(Token varNameToken) {
         TruffleString name = TruffleString.fromJavaStringUncached(varNameToken.getText(), TruffleString.Encoding.US_ASCII);
-        if (frame.currentScope.find(name) != null)
+        if (frame.currentScope.locals.containsKey(name))
             throw new LamaParseError(source, varNameToken.getLine(), varNameToken.getCharPositionInLine(), 1, String.format("cannot redefine %s", name));
         int slot = frame.frameDescriptorBuilder.addSlot(FrameSlotKind.Illegal, name, null);
         frame.currentScope.locals.put(name, slot);
@@ -256,7 +256,7 @@ public class LamaNodeFactory {
     }
 
     public SexpNode createCons(ExprNode lhs, ExprNode rhs) {
-        return new SexpNode("cons", new ExprNode[]{lhs, rhs});
+        return new SexpNode("Cons", new ExprNode[]{lhs, rhs});
     }
 
     public ExprNode createBinary(Token opToken, ExprNode lhs, ExprNode rhs) {
@@ -286,7 +286,7 @@ public class LamaNodeFactory {
         ExprNode result = new LongLiteralNode(0);
         Collections.reverse(elements);
         for (ExprNode element : elements)
-            result = new SexpNode("cons", new ExprNode[]{element, result});
+            result = new SexpNode("Cons", new ExprNode[]{element, result});
         return result;
     }
 
@@ -313,7 +313,7 @@ public class LamaNodeFactory {
     }
 
     public SexpPatternNode createConsPattern(PatternNode head, PatternNode tail) {
-        return new SexpPatternNode("cons", new PatternNode[]{head, tail});
+        return new SexpPatternNode("Cons", new PatternNode[]{head, tail});
     }
 
     public SexpPatternNode createSexpPattern(Token uident, List<PatternNode> subpatterns) {
@@ -324,13 +324,13 @@ public class LamaNodeFactory {
         PatternNode result = new LongLiteralPatternNode(0);
         Collections.reverse(subpatterns);
         for (PatternNode subpattern : subpatterns)
-            result = new SexpPatternNode("cons", new PatternNode[]{subpattern, result});
+            result = new SexpPatternNode("Cons", new PatternNode[]{subpattern, result});
         return result;
     }
 
     public BindingPatternNode createBindingPattern(Token lident, PatternNode subpattern) {
         TruffleString name = TruffleString.fromJavaStringUncached(lident.getText(), TruffleString.Encoding.US_ASCII);
-        if (frame.currentScope.find(name) != null)
+        if (frame.currentScope.locals.containsKey(name))
             throw new LamaParseError(source, lident.getLine(), lident.getCharPositionInLine(), 1, String.format("cannot redefine %s", name));
         int slot = frame.frameDescriptorBuilder.addSlot(FrameSlotKind.Illegal, name, null);
         frame.currentScope.locals.put(name, slot);
