@@ -9,10 +9,7 @@ import ru.usachev63.lamatruffle.LamaLanguage;
 import ru.usachev63.lamatruffle.nodes.*;
 import ru.usachev63.lamatruffle.nodes.expr.*;
 import ru.usachev63.lamatruffle.nodes.expr.numeric.*;
-import ru.usachev63.lamatruffle.nodes.pattern.BindingPatternNode;
-import ru.usachev63.lamatruffle.nodes.pattern.LongLiteralPatternNode;
-import ru.usachev63.lamatruffle.nodes.pattern.PatternNode;
-import ru.usachev63.lamatruffle.nodes.pattern.SexpPatternNode;
+import ru.usachev63.lamatruffle.nodes.pattern.*;
 
 import java.util.*;
 
@@ -196,7 +193,7 @@ public class LamaNodeFactory {
         return rawText.substring(1, rawText.length() - 1).replaceAll("\"\"", "\"");
     }
 
-    public LongLiteralNode createCharLiteral(Token literalToken) {
+    private int evaluateCharLiteral(Token literalToken) {
         String tokenText = literalToken.getText();
         assert tokenText.length() >= 3;
         assert tokenText.charAt(0) == '\'';
@@ -204,19 +201,24 @@ public class LamaNodeFactory {
         String innerText = tokenText.substring(1, tokenText.length() - 1);
         switch (innerText) {
             case "''" -> {
-                return new LongLiteralNode((int) '\'');
+                return '\'';
             }
             case "\\n" -> {
-                return new LongLiteralNode((int) '\n');
+                return '\n';
             }
             case "\\t" -> {
-                return new LongLiteralNode((int) '\t');
+                return '\t';
             }
             default -> {
                 assert innerText.length() == 1;
-                return new LongLiteralNode((int) innerText.charAt(0));
+                return innerText.charAt(0);
             }
         }
+
+    }
+
+    public LongLiteralNode createCharLiteral(Token literalToken) {
+        return new LongLiteralNode(evaluateCharLiteral(literalToken));
     }
 
     public ExprNode createVarRef(Token lident) {
@@ -320,6 +322,10 @@ public class LamaNodeFactory {
         return new SexpPatternNode(uident.getText(), subpatterns.toArray(new PatternNode[0]));
     }
 
+    public ArrayPatternNode createArrayPattern(List<PatternNode> subpatterns) {
+        return new ArrayPatternNode(subpatterns.toArray(new PatternNode[0]));
+    }
+
     public PatternNode createListPattern(List<PatternNode> subpatterns) {
         PatternNode result = new LongLiteralPatternNode(0);
         Collections.reverse(subpatterns);
@@ -335,5 +341,13 @@ public class LamaNodeFactory {
         int slot = frame.frameDescriptorBuilder.addSlot(FrameSlotKind.Illegal, name, null);
         frame.currentScope.locals.put(name, slot);
         return new BindingPatternNode(slot, subpattern);
+    }
+
+    public LongLiteralPatternNode createCharLiteralPattern(Token literalToken) {
+        return new LongLiteralPatternNode(evaluateCharLiteral(literalToken));
+    }
+
+    public StringLiteralPatternNode createStringLiteralPattern(Token literalToken) {
+        return new StringLiteralPatternNode(stringLiteralValueOf(literalToken.getText()));
     }
 }

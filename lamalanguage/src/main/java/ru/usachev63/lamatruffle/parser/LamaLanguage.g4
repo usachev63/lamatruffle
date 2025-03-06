@@ -288,10 +288,10 @@ primary[Attr attr] returns [ExprNode result]
   const_ { $result = $const_.result; }
 |
   {$attr != Attr.REF}?
-  stringLiteral { $result = $stringLiteral.result; }
+  STRING { $result = factory.createStringLiteral($STRING); }
 |
   {$attr != Attr.REF}?
-  charLiteral { $result = $charLiteral.result; }
+  CHAR { $result = factory.createCharLiteral($CHAR); }
 |
   varRef[attr] { $result = $varRef.result; }
 |
@@ -337,16 +337,6 @@ const_ returns [LongLiteralNode result]
   longLiteral {
     $result = new LongLiteralNode($longLiteral.result);
   }
-;
-
-stringLiteral returns [StringLiteralNode result]
-:
-STRING { $result = factory.createStringLiteral($STRING); }
-;
-
-charLiteral returns [LongLiteralNode result]
-:
-CHAR { $result = factory.createCharLiteral($CHAR); }
 ;
 
 varRef[Attr attr] returns [ExprNode result]
@@ -512,10 +502,19 @@ simplePattern returns [PatternNode result]
 :
   wildcardPattern { $result = $wildcardPattern.result; }
 | sexpPattern { $result = $sexpPattern.result; }
+| arrayPattern { $result = $arrayPattern.result; }
 | listPattern { $result = $listPattern.result; }
 | bindingPattern { $result = $bindingPattern.result; }
 | longLiteralPattern { $result = $longLiteralPattern.result; }
-| '#' 'fun' { $result = new FunPatternNode(); }
+| STRING { $result = factory.createStringLiteralPattern($STRING); }
+| CHAR { $result = factory.createCharLiteralPattern($CHAR); }
+| 'true' { $result = new LongLiteralPatternNode(1); }
+| 'false' { $result = new LongLiteralPatternNode(0); }
+| '#' 'val' { $result = new ValTypePatternNode(); }
+| '#' 'str' { $result = new StringTypePatternNode(); }
+| '#' 'array' { $result = new ArrayTypePatternNode(); }
+| '#' 'sexp' { $result = new SexpTypePatternNode(); }
+| '#' 'fun' { $result = new FunTypePatternNode(); }
 | '(' pattern ')' { $result = $pattern.result; }
 ;
 
@@ -537,6 +536,20 @@ sexpPattern returns [PatternNode result]
     ')'
   )?
   { $result = factory.createSexpPattern($UIDENT, subpatterns); }
+;
+
+arrayPattern returns [PatternNode result]
+:
+  { List<PatternNode> subpatterns = new ArrayList<>(); }
+  '['
+    (
+      pattern { subpatterns.add($pattern.result); }
+      (
+        ',' pattern { subpatterns.add($pattern.result); }
+      )*
+    )?
+  ']'
+  { $result = factory.createArrayPattern(subpatterns); }
 ;
 
 listPattern returns [PatternNode result]
