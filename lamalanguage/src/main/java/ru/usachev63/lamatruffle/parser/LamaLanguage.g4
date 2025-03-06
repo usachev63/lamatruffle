@@ -367,7 +367,7 @@ anonFunction returns [ExprNode result]
   }
   '(' functionParameters ')'
   '{' body=scopeExpressionNoStart[Attr.VOID, true] '}'
-  { factory.finishAnonFunction($body.result); }
+  { $result = factory.finishAnonFunction($body.result); }
 ;
 
 arrayExpression returns [ArrayExprNode result]
@@ -514,6 +514,8 @@ simplePattern returns [PatternNode result]
 | listPattern { $result = $listPattern.result; }
 | bindingPattern { $result = $bindingPattern.result; }
 | longLiteralPattern { $result = $longLiteralPattern.result; }
+| '#' 'fun' { $result = new FunPatternNode(); }
+| '(' pattern ')' { $result = $pattern.result; }
 ;
 
 wildcardPattern returns [PatternNode result]

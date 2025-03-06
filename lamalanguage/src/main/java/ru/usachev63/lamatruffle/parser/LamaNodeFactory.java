@@ -2,7 +2,6 @@ package ru.usachev63.lamatruffle.parser;
 
 import com.oracle.truffle.api.frame.FrameDescriptor;
 import com.oracle.truffle.api.frame.FrameSlotKind;
-import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.source.Source;
 import com.oracle.truffle.api.strings.TruffleString;
 import org.antlr.v4.runtime.Token;
@@ -10,7 +9,7 @@ import ru.usachev63.lamatruffle.LamaLanguage;
 import ru.usachev63.lamatruffle.nodes.*;
 import ru.usachev63.lamatruffle.nodes.expr.*;
 import ru.usachev63.lamatruffle.nodes.expr.numeric.*;
-import ru.usachev63.lamatruffle.nodes.pattern.BindingPattern;
+import ru.usachev63.lamatruffle.nodes.pattern.BindingPatternNode;
 import ru.usachev63.lamatruffle.nodes.pattern.LongLiteralPatternNode;
 import ru.usachev63.lamatruffle.nodes.pattern.PatternNode;
 import ru.usachev63.lamatruffle.nodes.pattern.SexpPatternNode;
@@ -328,12 +327,12 @@ public class LamaNodeFactory {
         return result;
     }
 
-    public BindingPattern createBindingPattern(Token lident, PatternNode subpattern) {
+    public BindingPatternNode createBindingPattern(Token lident, PatternNode subpattern) {
         TruffleString name = TruffleString.fromJavaStringUncached(lident.getText(), TruffleString.Encoding.US_ASCII);
         if (frame.currentScope.find(name) != null)
             throw new LamaParseError(source, lident.getLine(), lident.getCharPositionInLine(), 1, String.format("cannot redefine %s", name));
         int slot = frame.frameDescriptorBuilder.addSlot(FrameSlotKind.Illegal, name, null);
         frame.currentScope.locals.put(name, slot);
-        return new BindingPattern(slot, subpattern);
+        return new BindingPatternNode(slot, subpattern);
     }
 }

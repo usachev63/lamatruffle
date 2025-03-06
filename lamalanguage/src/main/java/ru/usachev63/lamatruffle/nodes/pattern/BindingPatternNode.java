@@ -2,12 +2,12 @@ package ru.usachev63.lamatruffle.nodes.pattern;
 
 import com.oracle.truffle.api.frame.VirtualFrame;
 
-public final class BindingPattern extends PatternNode {
+public final class BindingPatternNode extends PatternNode {
     private final int frameSlot;
     @Child
     private PatternNode subpattern;
 
-    public BindingPattern(int frameSlot, PatternNode subpattern) {
+    public BindingPatternNode(int frameSlot, PatternNode subpattern) {
         this.frameSlot = frameSlot;
         this.subpattern = subpattern;
     }
