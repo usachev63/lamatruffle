@@ -199,9 +199,9 @@ public class LamaLanguageParser extends Parser {
 
 	@SuppressWarnings("CheckReturnValue")
 	public static class LamaContext extends ParserRuleContext {
-		public ScopeExpressionContext scopeExpression;
-		public ScopeExpressionContext scopeExpression() {
-			return getRuleContext(ScopeExpressionContext.class,0);
+		public ScopeExpressionNoStartContext scopeExpressionNoStart;
+		public ScopeExpressionNoStartContext scopeExpressionNoStart() {
+			return getRuleContext(ScopeExpressionNoStartContext.class,0);
 		}
 		public TerminalNode EOF() { return getToken(LamaLanguageParser.EOF, 0); }
 		public LamaContext(ParserRuleContext parent, int invokingState) {
@@ -217,9 +217,9 @@ public class LamaLanguageParser extends Parser {
 			enterOuterAlt(_localctx, 1);
 			{
 			setState(94);
-			((LamaContext)_localctx).scopeExpression = scopeExpression(Attr.VOID, true);
+			((LamaContext)_localctx).scopeExpressionNoStart = scopeExpressionNoStart(Attr.VOID, true);
 
-			    factory.createMain(((LamaContext)_localctx).scopeExpression.result);
+			    factory.createMain(((LamaContext)_localctx).scopeExpressionNoStart.result);
 			  
 			setState(96);
 			match(EOF);
@@ -571,10 +571,7 @@ public class LamaLanguageParser extends Parser {
 			match(T__4);
 			setState(137);
 			((FunctionDefinitionContext)_localctx).LIDENT = match(LIDENT);
-
-			    factory.startFrame(((FunctionDefinitionContext)_localctx).LIDENT);
-			    factory.startScope();
-			  
+			 factory.startFrame(((FunctionDefinitionContext)_localctx).LIDENT); 
 			setState(139);
 			match(T__5);
 			setState(140);
@@ -1986,7 +1983,6 @@ public class LamaLanguageParser extends Parser {
 			match(T__4);
 
 			    factory.startAnonFrame();
-			    factory.startScope();
 			  
 			setState(409);
 			match(T__5);
@@ -3635,7 +3631,7 @@ public class LamaLanguageParser extends Parser {
 		"\u0000\u0000\u0000R\u0268\u0001\u0000\u0000\u0000T\u027c\u0001\u0000\u0000"+
 		"\u0000V\u028e\u0001\u0000\u0000\u0000X\u02a0\u0001\u0000\u0000\u0000Z"+
 		"\u02a7\u0001\u0000\u0000\u0000\\\u02ab\u0001\u0000\u0000\u0000^_\u0003"+
-		"\u0002\u0001\u0000_`\u0006\u0000\uffff\uffff\u0000`a\u0005\u0000\u0000"+
+		"\u0004\u0002\u0000_`\u0006\u0000\uffff\uffff\u0000`a\u0005\u0000\u0000"+
 		"\u0001a\u0001\u0001\u0000\u0000\u0000bc\u0006\u0001\uffff\uffff\u0000"+
 		"cd\u0003\u0004\u0002\u0000de\u0006\u0001\uffff\uffff\u0000e\u0003\u0001"+
 		"\u0000\u0000\u0000fh\u0003\u0006\u0003\u0000gf\u0001\u0000\u0000\u0000"+

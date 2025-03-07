@@ -75,8 +75,8 @@ public static class IfThenEntry {
 
 lama
 :
-  scopeExpression[Attr.VOID, true] {
-    factory.createMain($scopeExpression.result);
+  scopeExpressionNoStart[Attr.VOID, true] {
+    factory.createMain($scopeExpressionNoStart.result);
   }
   EOF
 ;
@@ -124,10 +124,7 @@ variableDefinitionItem
 
 functionDefinition
 :
-  'fun' LIDENT {
-    factory.startFrame($LIDENT);
-    factory.startScope();
-  }
+  'fun' LIDENT { factory.startFrame($LIDENT); }
   '(' functionParameters ')'
   '{' body=scopeExpressionNoStart[Attr.VOID, true] '}'
   { factory.finishFuncDecl($body.result); }
@@ -356,7 +353,6 @@ anonFunction returns [ExprNode result]
 :
   'fun' {
     factory.startAnonFrame();
-    factory.startScope();
   }
   '(' functionParameters ')'
   '{' body=scopeExpressionNoStart[Attr.VOID, true] '}'

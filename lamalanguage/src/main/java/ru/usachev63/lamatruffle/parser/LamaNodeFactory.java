@@ -32,15 +32,16 @@ public class LamaNodeFactory {
     private final Source source;
     private LamaRootNode main;
 
-    static class Frame {
-        protected final String functionName;
-        protected final Frame parent;
-        protected FrameDescriptor.Builder frameDescriptorBuilder = FrameDescriptor.newBuilder();
-        protected int parameterCount = 0;
-        protected final List<ExprNode> prolog = new ArrayList<>();
-        protected Scope currentScope = null;
+    private static class Frame {
+        private final String functionName;
+        private final Frame parent;
+        private final FrameDescriptor.Builder frameDescriptorBuilder = FrameDescriptor.newBuilder();
+        private int parameterCount = 0;
+        private final List<ExprNode> prolog = new ArrayList<>();
+        private final Scope topScope = new Scope(null);
+        private Scope currentScope = topScope;
 
-        Frame(String functionName, Frame parent) {
+        private Frame(String functionName, Frame parent) {
             this.functionName = functionName;
             this.parent = parent;
         }
