@@ -40,14 +40,28 @@ public class LamaNodeFactory {
         private final List<ExprNode> prolog = new ArrayList<>();
         private final Scope topScope = new Scope(null);
         private Scope currentScope = topScope;
+        private final Map<Integer, Integer> closureBinds = new HashMap<>();
 
         private Frame(String functionName, Frame parent) {
             this.functionName = functionName;
             this.parent = parent;
         }
 
-        public boolean isGlobal() {
+        private boolean isGlobal() {
             return parent == null;
+        }
+
+        private int createLocal(String name, Scope scope) {
+            var nameTruffleStr = TruffleString.fromJavaStringUncached(name, TruffleString.Encoding.US_ASCII);
+            if (scope.locals.containsKey(name))
+                throw new RuntimeException(String.format("cannot redefine %s", name));
+            int slot = frameDescriptorBuilder.addSlot(FrameSlotKind.Illegal, name, null);
+            scope.locals.put(nameTruffleStr, slot);
+            return slot;
+        }
+
+        private int createLocalHere(String name) {
+            return createLocal(name, currentScope);
         }
     }
 
@@ -87,7 +101,7 @@ public class LamaNodeFactory {
 
     public void addFormalParameter(Token lident) {
         int parameterIndex = frame.parameterCount++;
-        int frameSlot = addLocalVarDef(lident);
+        int frameSlot = frame.createLocalHere(lident.getText());
         ExprNode assn = createAssn(
             new LocalVarRefNode(frameSlot),
             new ArgReadNode(parameterIndex)
@@ -143,19 +157,10 @@ public class LamaNodeFactory {
             if (rhs != null)
                 frame.currentScope.prolog.add(new GlobalAssnNode(name, rhs));
         } else {
-            int frameSlot = addLocalVarDef(lident);
+            int frameSlot = frame.createLocalHere(lident.getText());
             if (rhs != null)
                 addLocalVarInitializer(frameSlot, rhs);
         }
-    }
-
-    private int addLocalVarDef(Token varNameToken) {
-        TruffleString name = TruffleString.fromJavaStringUncached(varNameToken.getText(), TruffleString.Encoding.US_ASCII);
-        if (frame.currentScope.locals.containsKey(name))
-            throw new LamaParseError(source, varNameToken.getLine(), varNameToken.getCharPositionInLine(), 1, String.format("cannot redefine %s", name));
-        int slot = frame.frameDescriptorBuilder.addSlot(FrameSlotKind.Illegal, name, null);
-        frame.currentScope.locals.put(name, slot);
-        return slot;
     }
 
     private void addLocalVarInitializer(int frameSlot, ExprNode value) {
@@ -224,12 +229,32 @@ public class LamaNodeFactory {
 
     public ExprNode createVarRef(Token lident) {
         String varName = lident.getText();
-        Integer frameSlot = frame.currentScope.find(TruffleString.fromJavaStringUncached(varName, TruffleString.Encoding.US_ASCII));
-        if (frameSlot == null) {
-            return new GlobalRefNode(varName);
-        } else {
-            return new LocalVarRefNode(frameSlot);
+        var varNameTruffleStr = TruffleString.fromJavaStringUncached(varName, TruffleString.Encoding.US_ASCII);
+        int originFrameSlot = 0; // silence warning
+        var frameStack = new ArrayList<Frame>();
+        Frame originFrame = frame;
+        while (originFrame != null) {
+            frameStack.add(originFrame);
+            var frameSlot = frame.currentScope.find(varNameTruffleStr);
+            if (frameSlot != null) {
+                originFrameSlot = frameSlot;
+                break;
+            }
+            originFrame = originFrame.parent;
         }
+        if (originFrame == null)
+            return new GlobalRefNode(varName);
+        if (originFrame == frame)
+            return new LocalVarRefNode(originFrameSlot);
+        Collections.reverse(frameStack);
+        int currentFrameSlot = originFrameSlot;
+        for (int i = 0; i < frameStack.size() - 1; ++i) {
+            var currentFrame = frameStack.get(i + 1);
+            var newFrameSlot = currentFrame.createLocal(varName, currentFrame.topScope);
+            currentFrame.closureBinds.put(currentFrameSlot, newFrameSlot);
+            currentFrameSlot = newFrameSlot;
+        }
+        return new LocalVarRefNode(currentFrameSlot);
     }
 
     public ElemRefNode createElemRef(ExprNode base, ExprNode index) {
@@ -336,11 +361,7 @@ public class LamaNodeFactory {
     }
 
     public BindingPatternNode createBindingPattern(Token lident, PatternNode subpattern) {
-        TruffleString name = TruffleString.fromJavaStringUncached(lident.getText(), TruffleString.Encoding.US_ASCII);
-        if (frame.currentScope.locals.containsKey(name))
-            throw new LamaParseError(source, lident.getLine(), lident.getCharPositionInLine(), 1, String.format("cannot redefine %s", name));
-        int slot = frame.frameDescriptorBuilder.addSlot(FrameSlotKind.Illegal, name, null);
-        frame.currentScope.locals.put(name, slot);
+        int slot = frame.createLocalHere(lident.getText());
         return new BindingPatternNode(slot, subpattern);
     }
 
