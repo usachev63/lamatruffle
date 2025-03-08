@@ -1,5 +1,7 @@
 package ru.usachev63.lamatruffle.runtime;
 
+import com.oracle.truffle.api.strings.TruffleStringBuilder;
+
 public class StringRenderer {
 
     public static String render(Object value) {
@@ -20,42 +22,44 @@ public class StringRenderer {
             renderArray(arrayValue);
         else if (value instanceof LamaSexp sexpValue)
             renderSexp(sexpValue);
-        else
-            builder.append("invalid value ").append(value.hashCode());
+        else {
+            builder.appendJavaStringUTF16Uncached("invalid value ");
+            builder.appendIntNumberUncached(value.hashCode());
+        }
     }
 
     private void renderLong(Long value) {
-        builder.append(value);
+        builder.appendIntNumberUncached(value.intValue());
     }
 
     private void renderString(LamaString stringValue) {
-        builder.append('"');
-        builder.append(stringValue.data);
-        builder.append('"');
+        builder.appendCharUTF16Uncached('"');
+        builder.appendJavaStringUTF16Uncached(stringValue.data.toString());
+        builder.appendCharUTF16Uncached('"');
     }
 
     private void renderArray(LamaArray arrayValue) {
-        builder.append('[');
+        builder.appendCharUTF16Uncached('[');
         for (int i = 0; i < arrayValue.elements.length; ++i) {
             if (i > 0)
-                builder.append(", ");
+                builder.appendJavaStringUTF16Uncached(", ");
             renderObject(arrayValue.elements[i]);
         }
-        builder.append(']');
+        builder.appendCharUTF16Uncached(']');
     }
 
     private void renderSexp(LamaSexp sexpValue) {
-        builder.append(sexpValue.uident);
+        builder.appendJavaStringUTF16Uncached(sexpValue.uident);
         if (sexpValue.elements.length > 0) {
-            builder.append(" (");
+            builder.appendJavaStringUTF16Uncached(" (");
             for (int i = 0; i < sexpValue.elements.length; ++i) {
                 if (i > 0)
-                    builder.append(", ");
+                    builder.appendJavaStringUTF16Uncached(", ");
                 renderObject(sexpValue.elements[i]);
             }
-            builder.append(")");
+            builder.appendJavaStringUTF16Uncached(")");
         }
     }
 
-    private StringBuilder builder = new StringBuilder();
+    private TruffleStringBuilder builder = TruffleStringBuilder.createUTF8();
 }
