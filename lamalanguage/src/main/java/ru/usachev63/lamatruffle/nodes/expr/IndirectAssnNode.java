@@ -1,5 +1,6 @@
 package ru.usachev63.lamatruffle.nodes.expr;
 
+import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.dsl.NodeChild;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.frame.VirtualFrame;
@@ -20,27 +21,31 @@ public abstract class IndirectAssnNode extends ExprNode {
     }
 
     @Specialization
+    @CompilerDirectives.TruffleBoundary
     protected Object assign(String globalName, Object rhs) {
         boolean result = LamaContext
             .get(this)
             .getGlobalScopeObject()
             .updateVariable(globalName, rhs);
         if (!result)
-            throw new RuntimeException("'" + globalName + "' ain't defined");
+            throw new RuntimeException();
         return rhs;
     }
 
     @Specialization
+    @CompilerDirectives.TruffleBoundary
     protected Object assign(LamaString.ElemDescriptor descriptor, long rhs) {
         descriptor.string().data[(int) descriptor.index()] = (char) rhs;
         return rhs;
     }
     @Specialization
+    @CompilerDirectives.TruffleBoundary
     protected Object assign(LamaArray.ElemDescriptor descriptor, Object rhs) {
         descriptor.array().elements[descriptor.index()] = rhs;
         return rhs;
     }
     @Specialization
+    @CompilerDirectives.TruffleBoundary
     protected Object assign(LamaSexp.ElemDescriptor descriptor, Object rhs) {
         descriptor.sexp().elements[descriptor.index()] = rhs;
         return rhs;

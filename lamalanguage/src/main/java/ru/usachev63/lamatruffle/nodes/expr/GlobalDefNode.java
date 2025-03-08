@@ -1,5 +1,6 @@
 package ru.usachev63.lamatruffle.nodes.expr;
 
+import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import ru.usachev63.lamatruffle.runtime.LamaContext;
 
@@ -12,12 +13,17 @@ public class GlobalDefNode extends ExprNode {
 
     @Override
     public Object executeGeneric(VirtualFrame frame) {
+        return impl();
+    }
+
+    @CompilerDirectives.TruffleBoundary
+    public int impl() {
         boolean result = LamaContext
             .get(this)
             .getGlobalScopeObject()
             .newVariable(name, 0);
         if (!result)
-            throw new RuntimeException("double definition of global " + name);
+            throw new RuntimeException();
         return 0;
     }
 }

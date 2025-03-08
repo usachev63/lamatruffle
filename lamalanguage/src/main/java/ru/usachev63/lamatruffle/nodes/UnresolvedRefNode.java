@@ -1,5 +1,6 @@
 package ru.usachev63.lamatruffle.nodes;
 
+import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.frame.VirtualFrame;
 
 public final class UnresolvedRefNode extends RefNode {
@@ -11,6 +12,11 @@ public final class UnresolvedRefNode extends RefNode {
 
     @Override
     public Object executeGeneric(VirtualFrame frame) {
+        return impl();
+    }
+
+    @CompilerDirectives.TruffleBoundary
+    int impl() {
         throw new RuntimeException("unresolved ref in runtime");
     }
 }

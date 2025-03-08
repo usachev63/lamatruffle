@@ -1,5 +1,6 @@
 package ru.usachev63.lamatruffle.nodes;
 
+import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.dsl.NodeChild;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.frame.VirtualFrame;
@@ -9,13 +10,14 @@ import ru.usachev63.lamatruffle.runtime.*;
 @NodeChild(value = "refNode", type = RefNode.class)
 public abstract class GenericReadNode extends ExprNode {
     @Specialization
+    @CompilerDirectives.TruffleBoundary
     protected Object read(String globalName) {
         var value = LamaContext
             .get(this)
             .getGlobalScopeObject()
             .getVariable(globalName);
         if (value == null)
-            throw new RuntimeException("Global '" + globalName + "' ain't defined");
+            throw new RuntimeException();
         return value;
     }
 
@@ -28,16 +30,19 @@ public abstract class GenericReadNode extends ExprNode {
     }
 
     @Specialization
+    @CompilerDirectives.TruffleBoundary
     protected long read(LamaString.ElemDescriptor descriptor) {
         return descriptor.string().data[(int)descriptor.index()];
     }
 
     @Specialization
+    @CompilerDirectives.TruffleBoundary
     protected Object read(LamaArray.ElemDescriptor descriptor) {
         return descriptor.array().elements[descriptor.index()];
     }
 
     @Specialization
+    @CompilerDirectives.TruffleBoundary
     protected Object read(LamaSexp.ElemDescriptor descriptor) {
         return descriptor.sexp().elements[descriptor.index()];
     }

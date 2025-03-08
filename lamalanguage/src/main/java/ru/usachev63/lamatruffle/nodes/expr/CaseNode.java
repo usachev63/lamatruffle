@@ -36,6 +36,6 @@ public class CaseNode extends ExprNode {
                 return branch.outcomeNode.executeGeneric(frame);
             }
         }
-        throw new RuntimeException("case expression fail");
+        return null;
     }
 }

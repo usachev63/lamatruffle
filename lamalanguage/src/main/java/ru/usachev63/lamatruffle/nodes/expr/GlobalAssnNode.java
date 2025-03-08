@@ -1,5 +1,6 @@
 package ru.usachev63.lamatruffle.nodes.expr;
 
+import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import ru.usachev63.lamatruffle.runtime.LamaContext;
 
@@ -20,7 +21,7 @@ public class GlobalAssnNode extends ExprNode {
             .getGlobalScopeObject()
             .updateVariable(name, value);
         if (!result)
-            throw new RuntimeException("Global '" + name + "' ain't defined");
+            throw new RuntimeException();
         return value;
     }
 }

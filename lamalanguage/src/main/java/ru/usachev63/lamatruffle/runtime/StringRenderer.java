@@ -1,9 +1,11 @@
 package ru.usachev63.lamatruffle.runtime;
 
+import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.strings.TruffleStringBuilder;
 
 public class StringRenderer {
 
+    @CompilerDirectives.TruffleBoundary
     public static String render(Object value) {
         return new StringRenderer().renderImpl(value);
     }

@@ -225,7 +225,7 @@ public class LamaNodeFactory {
     }
 
     public StringLiteralNode createStringLiteral(Token literalToken) {
-        return new StringLiteralNode(stringLiteralValueOf(literalToken.getText()));
+        return StringLiteralNodeGen.create(stringLiteralValueOf(literalToken.getText()));
     }
 
     private String stringLiteralValueOf(String rawText) {

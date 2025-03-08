@@ -123,7 +123,10 @@
                                     <commandlineArgs>
                                         -p %classpath
                                         -H:+ReportExceptionStackTraces
+                                        --verbose
+                                        --report-unsupported-elements-at-runtime
                                         -m ${launcherClass}
+                                        --initialize-at-build-time=ru.usachev63.lamatruffle
                                         -o ${project.build.directory}/slnative
                                     </commandlineArgs>
                                 </configuration>

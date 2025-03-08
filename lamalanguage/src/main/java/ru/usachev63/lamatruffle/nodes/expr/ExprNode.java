@@ -15,7 +15,7 @@ public abstract class ExprNode extends LamaNode {
         try {
             return LamaTypesGen.expectLong(executeGeneric(frame));
         } catch (UnexpectedResultException e) {
-            throw new RuntimeException(e);
+            throw new RuntimeException();
         }
     }
 }
