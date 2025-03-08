@@ -48,7 +48,7 @@ public static RootCallTarget parseLama(LamaLanguage language, Source source) {
     BailoutErrorListener listener = new BailoutErrorListener(source);
     lexer.addErrorListener(listener);
     parser.addErrorListener(listener);
-    parser.factory = new LamaNodeFactory(language, source);
+    parser.factory = new LamaNodeFactory(language);
     parser.lama();
     return parser.factory.getMain().getCallTarget();
 }

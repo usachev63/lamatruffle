@@ -4,31 +4,35 @@ import com.oracle.truffle.api.CallTarget;
 import com.oracle.truffle.api.interop.InteropLibrary;
 import com.oracle.truffle.api.interop.TruffleObject;
 import com.oracle.truffle.api.library.ExportLibrary;
-import com.oracle.truffle.api.library.ExportMessage;
-import ru.usachev63.lamatruffle.nodes.FunctionDispatchNode;
-import ru.usachev63.lamatruffle.nodes.FunctionDispatchNodeGen;
+import ru.usachev63.lamatruffle.nodes.LamaRootNode;
 
-/**
- * The object that represents a function in EasyScript.
- * Almost identical to the class with the same name from part 6,
- * except we save the number of arguments the function takes.
- *
- * @see #argumentCount
- */
 @ExportLibrary(InteropLibrary.class)
 public final class FunctionObject implements TruffleObject {
     public final CallTarget callTarget;
-
-    /**
-     * The number of declared arguments this function takes.
-     * We check that from the {@link FunctionDispatchNode}
-     * so we can extend the arguments with 'undefined's
-     * if the function is called with less of them than this number.
-     */
     public final int argumentCount;
+    public final LamaArray closureContext;
 
-    public FunctionObject(CallTarget callTarget, int argumentCount) {
+    public boolean isClosure() { return closureContext != null; }
+
+    public static FunctionObject makeFunction(LamaRootNode rootNode) {
+        return new FunctionObject(rootNode.getCallTarget(), rootNode.parametersNum, null);
+    }
+
+    public static FunctionObject makeFunction(CallTarget callTarget, int parametersNum) {
+        return new FunctionObject(callTarget, parametersNum, null);
+    }
+
+    public static FunctionObject makeClosure(LamaRootNode rootNode, Object[] initialClosureVariables) {
+        return new FunctionObject(rootNode.getCallTarget(), rootNode.parametersNum, new LamaArray(initialClosureVariables));
+    }
+
+    private FunctionObject(
+        CallTarget callTarget,
+        int argumentCount,
+        LamaArray closureContext
+    ) {
         this.callTarget = callTarget;
         this.argumentCount = argumentCount;
+        this.closureContext = closureContext;
     }
 }

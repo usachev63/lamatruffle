@@ -59,6 +59,6 @@ public final class LamaLanguage extends TruffleLanguage<LamaContext> {
         var builtInFuncRootNode = new LamaBuiltinRootNode(this,
             nodeFactory.createNode((Object) functionArguments));
         context.getGlobalScopeObject().newVariable(name,
-            new FunctionObject(builtInFuncRootNode.getCallTarget(), argumentsNum));
+            FunctionObject.makeFunction(builtInFuncRootNode.getCallTarget(), argumentsNum));
     }
 }

@@ -2,7 +2,6 @@ package ru.usachev63.lamatruffle.parser;
 
 import com.oracle.truffle.api.frame.FrameDescriptor;
 import com.oracle.truffle.api.frame.FrameSlotKind;
-import com.oracle.truffle.api.source.Source;
 import com.oracle.truffle.api.strings.TruffleString;
 import org.antlr.v4.runtime.Token;
 import ru.usachev63.lamatruffle.LamaLanguage;
@@ -14,9 +13,8 @@ import ru.usachev63.lamatruffle.nodes.pattern.*;
 import java.util.*;
 
 public class LamaNodeFactory {
-    public LamaNodeFactory(LamaLanguage language, Source source) {
+    public LamaNodeFactory(LamaLanguage language) {
         this.language = language;
-        this.source = source;
     }
 
     public LamaRootNode getMain() {
@@ -24,12 +22,17 @@ public class LamaNodeFactory {
     }
 
     public void createMain(ScopeExprNode body) {
-        this.main = new LamaRootNode(language, frame.frameDescriptorBuilder.build(), body, null, TruffleString.fromJavaStringUncached("main", TruffleString.Encoding.UTF_8));
+        this.main = new LamaRootNode(
+            language,
+            frame.frameDescriptorBuilder.build(),
+            body,
+            TruffleString.fromJavaStringUncached("main", TruffleString.Encoding.UTF_8),
+            0
+        );
         frame = null;
     }
 
     private final LamaLanguage language;
-    private final Source source;
     private LamaRootNode main;
 
     private static class Frame {
@@ -40,6 +43,10 @@ public class LamaNodeFactory {
         private final List<ExprNode> prolog = new ArrayList<>();
         private final Scope topScope = new Scope(null);
         private Scope currentScope = topScope;
+        private boolean isClosure = false;
+        private LocalVarRefNode closureContextLocal = null;
+        private final List<ExprNode> closureBindings = new ArrayList<>();
+        private int closureVarNum = 0;
 
         private Frame(String functionName, Frame parent) {
             this.functionName = functionName;
@@ -50,36 +57,72 @@ public class LamaNodeFactory {
             return parent == null;
         }
 
-//        private boolean isClosure() {
-//            return !closureBinds.isEmpty();
-//        }
-
         private LocalVarRefNode createLocal(String name, Scope scope) {
             var nameTruffleStr = TruffleString.fromJavaStringUncached(name, TruffleString.Encoding.US_ASCII);
-            if (scope.locals.containsKey(name))
+            if (scope.variables.containsKey(nameTruffleStr))
                 throw new RuntimeException(String.format("cannot redefine %s", name));
             int slot = frameDescriptorBuilder.addSlot(FrameSlotKind.Illegal, name, null);
             var refNode = new LocalVarRefNode(slot);
-            scope.locals.put(nameTruffleStr, refNode);
+            scope.variables.put(nameTruffleStr, refNode);
             return refNode;
         }
 
         private LocalVarRefNode createLocalHere(String name) {
             return createLocal(name, currentScope);
         }
+
+        private void makeClosure() {
+            if (isClosure)
+                return;
+            isClosure = true;
+            closureContextLocal = createLocal("__closure_context", topScope);
+            prolog.add(
+                new LocalVarAssnNode(
+                    closureContextLocal,
+                    new ArgReadNode(parameterCount)
+                )
+            );
+        }
+
+        private ElemRefNode createClosureVar(String name, ExprNode origin) {
+            if (!isClosure)
+                makeClosure();
+            int closureVarIndex = closureVarNum++;
+            closureBindings.add(origin);
+            var closureVarRef = ElemRefNodeGen.create(
+                new LocalVarReadNode(closureContextLocal),
+                new LongLiteralNode(closureVarIndex)
+            );
+            var nameAsTruffleStr = TruffleString.fromJavaStringUncached(name, TruffleString.Encoding.US_ASCII);
+            topScope.variables.put(nameAsTruffleStr, closureVarRef);
+            return closureVarRef;
+        }
+
+        private LamaRootNode buildRootNode(ScopeExprNode body, LamaLanguage language) {
+            Collections.reverse(prolog);
+            for (var expr : prolog)
+                body.setBody(new SeqNode(expr, body.getBody()));
+            return new LamaRootNode(
+                language,
+                frameDescriptorBuilder.build(),
+                body,
+                TruffleString.fromJavaStringUncached(functionName, TruffleString.Encoding.UTF_8),
+                parameterCount
+            );
+        }
     }
 
     static class Scope {
         private final Scope outer;
         private final List<ExprNode> prolog = new ArrayList<>();
-        private final Map<TruffleString, RefNode> locals = new HashMap<>();
+        private final Map<TruffleString, RefNode> variables = new HashMap<>();
 
         private Scope(Scope outer) {
             this.outer = outer;
         }
 
         private RefNode find(TruffleString name) {
-            var result = locals.get(name);
+            var result = variables.get(name);
             if (result != null)
                 return result;
             if (outer != null)
@@ -98,8 +141,17 @@ public class LamaNodeFactory {
         frame = new Frame(lident.getText(), frame);
     }
 
+    private Frame popFrame() {
+        var result = frame;
+        frame = frame.parent;
+        return result;
+    }
+
     private int anonFunctionCount = 1;
-    public void startAnonFrame() { frame = new Frame("anon" + (anonFunctionCount++), frame); }
+
+    public void startAnonFrame() {
+        frame = new Frame("anon" + (anonFunctionCount++), frame);
+    }
 
     public void addFormalParameter(Token lident) {
         int parameterIndex = frame.parameterCount++;
@@ -109,35 +161,24 @@ public class LamaNodeFactory {
     }
 
     public void finishFuncDecl(ScopeExprNode body) {
-        var frameAndRootNode = finishFrame(body);
-        var frame = frameAndRootNode.frame;
-        var rootNode = frameAndRootNode.rootNode;
-        this.frame.currentScope.prolog.add(new FuncDeclNode(frame.functionName, frame.parameterCount, rootNode));
+        var lastFrame = popFrame();
+        var rootNode = lastFrame.buildRootNode(body, language);
+        var nameAsTruffleStr = TruffleString.fromJavaStringUncached(lastFrame.functionName, TruffleString.Encoding.US_ASCII);
+        if (frame.currentScope.variables.containsKey(nameAsTruffleStr))
+            throw new RuntimeException("cannot redeclare " + lastFrame.functionName + " for a function");
+        var functionRefNode = !lastFrame.isClosure ?
+            FunctionRefNode.create(rootNode) :
+            FunctionRefNode.createClosure(rootNode, lastFrame.closureBindings.toArray(ExprNode[]::new));
+        frame.currentScope.variables.put(nameAsTruffleStr, functionRefNode);
     }
 
     public ExprNode finishAnonFunction(ScopeExprNode body) {
-        var frameAndRootNode = finishFrame(body);
-        return new AnonFunctionNode(frameAndRootNode.frame.parameterCount, frameAndRootNode.rootNode);
-    }
-
-    private record FrameAndRootNode(Frame frame, LamaRootNode rootNode) {}
-
-    private FrameAndRootNode finishFrame(ScopeExprNode body) {
-        assert frame != null;
-        Collections.reverse(frame.prolog);
-        for (var expr : frame.prolog) {
-            body.setBody(new SeqNode(expr, body.getBody()));
-        }
-        var rootNode = new LamaRootNode(
-            language,
-            frame.frameDescriptorBuilder.build(),
-            body,
-            null,
-            TruffleString.fromJavaStringUncached(frame.functionName, TruffleString.Encoding.UTF_8)
-        );
-        var result = new FrameAndRootNode(frame, rootNode);
-        frame = frame.parent;
-        return result;
+        var lastFrame = popFrame();
+        var rootNode = lastFrame.buildRootNode(body, language);
+        FunctionRefNode refNode = !lastFrame.isClosure ?
+            FunctionRefNode.create(rootNode) :
+            FunctionRefNode.createClosure(rootNode, lastFrame.closureBindings.toArray(new ExprNode[0]));
+        return FunctionSpawnNodeGen.create(refNode);
     }
 
     /* parsing scope begin */
@@ -160,10 +201,6 @@ public class LamaNodeFactory {
                 );
             }
         }
-    }
-
-    private void addLocalVarInitializer(int frameSlot, ExprNode value) {
-        frame.currentScope.prolog.add(new LocalVarAssnNode(new LocalVarRefNode(frameSlot), value));
     }
 
     public ScopeExprNode finishScope(ExprNode body, boolean popScope) {
@@ -234,7 +271,7 @@ public class LamaNodeFactory {
         Frame originFrame = frame;
         while (originFrame != null) {
             frameStack.add(originFrame);
-            RefNode ref = frame.currentScope.find(varNameTruffleStr);
+            RefNode ref = originFrame.currentScope.find(varNameTruffleStr);
             if (ref != null) {
                 origin = ref;
                 break;
@@ -249,8 +286,10 @@ public class LamaNodeFactory {
         RefNode current = origin;
         for (int i = 0; i < frameStack.size() - 1; ++i) {
             var currentFrame = frameStack.get(i + 1);
-            RefNode newFrameSlot = currentFrame.createLocal(varName, currentFrame.topScope);
-            current = newFrameSlot;
+            current = currentFrame.createClosureVar(
+                varName,
+                createRead(current)
+            );
         }
         return current;
     }
@@ -274,7 +313,11 @@ public class LamaNodeFactory {
             return new GlobalReadNode(globalRefNode.getName());
         if (refNode instanceof LocalVarRefNode localVarRefNode)
             return new LocalVarReadNode(localVarRefNode);
-        throw new IllegalStateException("wrong refNode in createVarRead");
+        if (refNode instanceof ElemRefNode elemRefNode)
+            return ElemReadNodeGen.create(elemRefNode);
+        if (refNode instanceof FunctionRefNode functionRefNode)
+            return FunctionSpawnNodeGen.create(functionRefNode);
+        throw new IllegalStateException("wrong refNode in createRead");
     }
 
     public ElemReadNode createElemRead(ExprNode container, ExprNode index) {
