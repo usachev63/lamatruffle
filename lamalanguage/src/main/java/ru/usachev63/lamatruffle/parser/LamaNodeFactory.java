@@ -104,13 +104,15 @@ public class LamaNodeFactory {
             Collections.reverse(prolog);
             for (var expr : prolog)
                 body.setBody(new SeqNode(expr, body.getBody()));
-            return new LamaRootNode(
+            var rootNode = new LamaRootNode(
                 language,
                 frameDescriptorBuilder.build(),
                 body,
                 TruffleString.fromJavaStringUncached(functionName, TruffleString.Encoding.UTF_8),
                 parameterCount
             );
+            rootNode.adoptChildren();
+            return rootNode;
         }
     }
 
@@ -274,37 +276,6 @@ public class LamaNodeFactory {
         var node = new UnresolvedRefNode(lident.getText());
         unresolvedRefs.add(new UnresolvedRef(node, frame, frame.currentScope));
         return node;
-    }
-
-    public RefNode resolveRefOld(Token lident) {
-        String varName = lident.getText();
-        var varNameTruffleStr = TruffleString.fromJavaStringUncached(varName, TruffleString.Encoding.US_ASCII);
-        RefNode origin = null;
-        var frameStack = new ArrayList<Frame>();
-        Frame originFrame = frame;
-        while (originFrame != null) {
-            frameStack.add(originFrame);
-            RefNode ref = originFrame.currentScope.find(varNameTruffleStr);
-            if (ref != null) {
-                origin = ref;
-                break;
-            }
-            originFrame = originFrame.parent;
-        }
-        if (originFrame == null)
-            return new GlobalRefNode(varName);
-        if (originFrame == frame)
-            return origin;
-        Collections.reverse(frameStack);
-        RefNode current = origin;
-        for (int i = 0; i < frameStack.size() - 1; ++i) {
-            var currentFrame = frameStack.get(i + 1);
-            current = currentFrame.createClosureVar(
-                varName,
-                createRead(current)
-            );
-        }
-        return current;
     }
 
     public ElemRefNode createElemRef(ExprNode base, ExprNode index) {
