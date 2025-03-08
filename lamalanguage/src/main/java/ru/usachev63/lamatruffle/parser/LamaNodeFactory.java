@@ -164,12 +164,15 @@ public class LamaNodeFactory {
         var lastFrame = popFrame();
         var rootNode = lastFrame.buildRootNode(body, language);
         var nameAsTruffleStr = TruffleString.fromJavaStringUncached(lastFrame.functionName, TruffleString.Encoding.US_ASCII);
-        if (frame.currentScope.variables.containsKey(nameAsTruffleStr))
-            throw new RuntimeException("cannot redeclare " + lastFrame.functionName + " for a function");
         var functionRefNode = !lastFrame.isClosure ?
             FunctionRefNode.create(rootNode) :
             FunctionRefNode.createClosure(rootNode, lastFrame.closureBindings.toArray(ExprNode[]::new));
-        frame.currentScope.variables.put(nameAsTruffleStr, functionRefNode);
+        if (isGlobalScope()) {
+            frame.currentScope.prolog.add(new GlobalDefNode(lastFrame.functionName));
+            frame.currentScope.prolog.add(new GlobalAssnNode(lastFrame.functionName, FunctionSpawnNodeGen.create(functionRefNode)));
+        } else {
+            frame.currentScope.variables.put(nameAsTruffleStr, functionRefNode);
+        }
     }
 
     public ExprNode finishAnonFunction(ScopeExprNode body) {
