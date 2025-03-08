@@ -44,12 +44,11 @@ public abstract class GenericReadNode extends ExprNode {
 
     @Specialization
     protected Object read(VirtualFrame frame, FunctionRef ref) {
-        return ref;
-//        if (!ref.isClosure())
-//            return FunctionObject.makeFunction(ref.rootNode);
-//        Object[] closureVarInits = new Object[ref.closureVarInitNodes.length];
-//        for (int i = 0; i < ref.closureVarInitNodes.length; ++i)
-//            closureVarInits[i] = ref.closureVarInitNodes[i].executeGeneric(frame);
-//        return FunctionObject.makeClosure(ref.rootNode, closureVarInits);
+        if (!ref.isClosure())
+            return FunctionObject.makeFunction(ref.rootNode);
+        Object[] closureVarInits = new Object[ref.closureVarInitNodes.length];
+        for (int i = 0; i < ref.closureVarInitNodes.length; ++i)
+            closureVarInits[i] = ref.closureVarInitNodes[i].executeGeneric(frame);
+        return FunctionObject.makeClosure(ref.rootNode, closureVarInits);
     }
 }
