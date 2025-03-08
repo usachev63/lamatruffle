@@ -15,7 +15,7 @@ public class ArgReadNode extends ExprNode {
         if (index < args.length) {
             return args[index];
         } else {
-            throw new RuntimeException("invalid arg");
+            throw new RuntimeException(String.format("ArgReadNode: invalid arg %d >= %d", index, args.length));
         }
     }
 }

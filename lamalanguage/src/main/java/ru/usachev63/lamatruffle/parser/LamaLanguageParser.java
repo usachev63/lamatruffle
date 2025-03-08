@@ -7,7 +7,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import com.oracle.truffle.api.*;
-import com.oracle.truffle.api.nodes.NodeUtil;
 import com.oracle.truffle.api.source.*;
 import ru.usachev63.lamatruffle.*;
 import ru.usachev63.lamatruffle.nodes.*;
@@ -175,7 +174,6 @@ public class LamaLanguageParser extends Parser {
 	    parser.lama();
 		parser.factory.getMain().adoptChildren();
 	    parser.factory.resolveAllRefs();
-		NodeUtil.printTree(System.out, parser.factory.getMain());
 	    return parser.factory.getMain().getCallTarget();
 	}
 

@@ -46,8 +46,8 @@ public class LamaNodeFactory {
         private Scope currentScope = topScope;
         private boolean isClosure = false;
         private ExprNode closureContextReadNode = null;
-        private final List<ExprNode> closureBindings = new ArrayList<>();
         private int closureVarNum = 0;
+        private final FunctionRefNode thisRefNode = new FunctionRefNode();
 
         private Frame(String functionName, Frame parent, Scope parentScope) {
             this.functionName = functionName;
@@ -84,7 +84,7 @@ public class LamaNodeFactory {
             if (!isClosure)
                 makeClosure();
             int closureVarIndex = closureVarNum++;
-            closureBindings.add(origin);
+            this.thisRefNode.closureVarInitNodes.add(origin);
             var closureVarRef = ElemRefNodeGen.create(
                 closureContextReadNode,
                 new LongLiteralNode(closureVarIndex)
@@ -94,19 +94,18 @@ public class LamaNodeFactory {
             return closureVarRef;
         }
 
-        private LamaRootNode buildRootNode(ScopeExprNode body, LamaLanguage language) {
+        private void buildRootNode(ScopeExprNode body, LamaLanguage language) {
             Collections.reverse(prolog);
             for (var expr : prolog)
                 body.setBody(new SeqNode(expr, body.getBody()));
-            var rootNode = new LamaRootNode(
+            thisRefNode.rootNode = new LamaRootNode(
                 language,
                 frameDescriptorBuilder.build(),
                 body,
                 TruffleString.fromJavaStringUncached(functionName, TruffleString.Encoding.UTF_8),
                 parameterCount
             );
-            rootNode.adoptChildren();
-            return rootNode;
+            thisRefNode.rootNode.adoptChildren();
         }
     }
 
@@ -162,11 +161,9 @@ public class LamaNodeFactory {
 
     public void finishFuncDecl(ScopeExprNode body) {
         var lastFrame = popFrame();
-        var rootNode = lastFrame.buildRootNode(body, language);
+        lastFrame.buildRootNode(body, language);
         var nameAsTruffleStr = TruffleString.fromJavaStringUncached(lastFrame.functionName, TruffleString.Encoding.US_ASCII);
-        var functionRefNode = !lastFrame.isClosure ?
-            FunctionRefNode.create(rootNode) :
-            FunctionRefNode.createClosure(rootNode, lastFrame.closureBindings.toArray(ExprNode[]::new));
+        var functionRefNode = lastFrame.thisRefNode;
         if (isGlobalScope()) {
             frame.currentScope.prolog.add(new GlobalDefNode(lastFrame.functionName));
             frame.currentScope.prolog.add(new GlobalAssnNode(lastFrame.functionName, FunctionSpawnNodeGen.create(functionRefNode)));
@@ -177,10 +174,8 @@ public class LamaNodeFactory {
 
     public ExprNode finishAnonFunction(ScopeExprNode body) {
         var lastFrame = popFrame();
-        var rootNode = lastFrame.buildRootNode(body, language);
-        FunctionRefNode refNode = !lastFrame.isClosure ?
-            FunctionRefNode.create(rootNode) :
-            FunctionRefNode.createClosure(rootNode, lastFrame.closureBindings.toArray(new ExprNode[0]));
+        lastFrame.buildRootNode(body, language);
+        FunctionRefNode refNode = lastFrame.thisRefNode;
         return FunctionSpawnNodeGen.create(refNode);
     }
 
@@ -294,7 +289,7 @@ public class LamaNodeFactory {
         if (refNode instanceof ElemRefNode elemRefNode)
             return ElemReadNodeGen.create(elemRefNode);
         if (refNode instanceof FunctionRefNode functionRefNode)
-            return FunctionSpawnNodeGen.create(functionRefNode);
+            return refNode;
         throw new IllegalStateException("wrong refNode in createRead");
     }
 
