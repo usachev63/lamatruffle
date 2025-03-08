@@ -38,6 +38,7 @@ public class LamaNodeFactory {
     private static class Frame {
         private final String functionName;
         private final Frame parent;
+        private final Scope parentScope;
         private final FrameDescriptor.Builder frameDescriptorBuilder = FrameDescriptor.newBuilder();
         private int parameterCount = 0;
         private final List<ExprNode> prolog = new ArrayList<>();
@@ -48,9 +49,10 @@ public class LamaNodeFactory {
         private final List<ExprNode> closureBindings = new ArrayList<>();
         private int closureVarNum = 0;
 
-        private Frame(String functionName, Frame parent) {
+        private Frame(String functionName, Frame parent, Scope parentScope) {
             this.functionName = functionName;
             this.parent = parent;
+            this.parentScope = parentScope;
         }
 
         private boolean isGlobal() {
@@ -131,14 +133,16 @@ public class LamaNodeFactory {
         }
     }
 
-    Frame frame = new Frame("main", null);
+    private record UnresolvedRef(UnresolvedRefNode node, Frame frame, Scope scope) {}
+    private final List<UnresolvedRef> unresolvedRefs = new ArrayList<>();
+    private Frame frame = new Frame("main", null, null);
 
     public boolean isGlobalScope() {
         return frame.isGlobal() && frame.currentScope.outer == null;
     }
 
     public void startFrame(Token lident) {
-        frame = new Frame(lident.getText(), frame);
+        frame = new Frame(lident.getText(), frame, frame.currentScope);
     }
 
     private Frame popFrame() {
@@ -150,7 +154,7 @@ public class LamaNodeFactory {
     private int anonFunctionCount = 1;
 
     public void startAnonFrame() {
-        frame = new Frame("anon" + (anonFunctionCount++), frame);
+        frame = new Frame("anon" + (anonFunctionCount++), frame, frame.currentScope);
     }
 
     public void addFormalParameter(Token lident) {
@@ -266,7 +270,13 @@ public class LamaNodeFactory {
         return new LongLiteralNode(evaluateCharLiteral(literalToken));
     }
 
-    public RefNode resolveRef(Token lident) {
+    public UnresolvedRefNode createUnresolvedRef(Token lident) {
+        var node = new UnresolvedRefNode(lident.getText());
+        unresolvedRefs.add(new UnresolvedRef(node, frame, frame.currentScope));
+        return node;
+    }
+
+    public RefNode resolveRefOld(Token lident) {
         String varName = lident.getText();
         var varNameTruffleStr = TruffleString.fromJavaStringUncached(varName, TruffleString.Encoding.US_ASCII);
         RefNode origin = null;
@@ -415,5 +425,45 @@ public class LamaNodeFactory {
 
     public StringLiteralPatternNode createStringLiteralPattern(Token literalToken) {
         return new StringLiteralPatternNode(stringLiteralValueOf(literalToken.getText()));
+    }
+
+    public void resolveAllRefs() {
+        for (UnresolvedRef unresolvedRef : unresolvedRefs) {
+            RefNode resolvedRefNode = resolveRef(unresolvedRef);
+            unresolvedRef.node.replace(resolvedRefNode);
+        }
+    }
+
+    private RefNode resolveRef(UnresolvedRef unresolvedRef) {
+        String varName = unresolvedRef.node.lident;
+        var varNameTruffleStr = TruffleString.fromJavaStringUncached(varName, TruffleString.Encoding.US_ASCII);
+        RefNode origin = null;
+        var frameStack = new ArrayList<Frame>();
+        Frame originFrame = unresolvedRef.frame;
+        Scope originScope = unresolvedRef.scope;
+        while (originFrame != null) {
+            frameStack.add(originFrame);
+            RefNode ref = originScope.find(varNameTruffleStr);
+            if (ref != null) {
+                origin = ref;
+                break;
+            }
+            originScope = originFrame.parentScope;
+            originFrame = originFrame.parent;
+        }
+        if (originFrame == null)
+            return new GlobalRefNode(varName);
+        if (originFrame == unresolvedRef.frame)
+            return origin;
+        Collections.reverse(frameStack);
+        RefNode current = origin;
+        for (int i = 0; i < frameStack.size() - 1; ++i) {
+            var currentFrame = frameStack.get(i + 1);
+            current = currentFrame.createClosureVar(
+                varName,
+                createRead(current)
+            );
+        }
+        return current;
     }
 }

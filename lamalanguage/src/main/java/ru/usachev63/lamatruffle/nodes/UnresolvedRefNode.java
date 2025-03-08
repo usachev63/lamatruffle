@@ -3,10 +3,10 @@ package ru.usachev63.lamatruffle.nodes;
 import com.oracle.truffle.api.frame.VirtualFrame;
 
 public final class UnresolvedRefNode extends RefNode {
-    public final String identifier;
+    public final String lident;
 
-    public UnresolvedRefNode(String identifier) {
-        this.identifier = identifier;
+    public UnresolvedRefNode(String lident) {
+        this.lident = lident;
     }
 
     @Override

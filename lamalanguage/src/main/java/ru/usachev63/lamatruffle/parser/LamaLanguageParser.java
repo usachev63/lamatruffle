@@ -172,6 +172,8 @@ public class LamaLanguageParser extends Parser {
 	    parser.addErrorListener(listener);
 	    parser.factory = new LamaNodeFactory(language);
 	    parser.lama();
+		parser.factory.getMain().adoptChildren();
+	    parser.factory.resolveAllRefs();
 	    return parser.factory.getMain().getCallTarget();
 	}
 
@@ -1938,7 +1940,7 @@ public class LamaLanguageParser extends Parser {
 			setState(404);
 			((VarRefContext)_localctx).LIDENT = match(LIDENT);
 
-			    var refNode = new UnresolvedRefNode((((VarRefContext)_localctx).LIDENT!=null?((VarRefContext)_localctx).LIDENT.getText():null));
+			    var refNode = factory.createUnresolvedRef(((VarRefContext)_localctx).LIDENT);
 			    if (attr == Attr.REF)
 			      ((VarRefContext)_localctx).result =  refNode;
 			    else

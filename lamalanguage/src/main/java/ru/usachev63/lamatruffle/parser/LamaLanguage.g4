@@ -50,6 +50,8 @@ public static RootCallTarget parseLama(LamaLanguage language, Source source) {
     parser.addErrorListener(listener);
     parser.factory = new LamaNodeFactory(language);
     parser.lama();
+	parser.factory.getMain().adoptChildren();
+    parser.factory.resolveAllRefs();
     return parser.factory.getMain().getCallTarget();
 }
 
@@ -341,7 +343,7 @@ const_ returns [LongLiteralNode result]
 varRef[Attr attr] returns [ExprNode result]
 :
   LIDENT {
-    var refNode = new UnresolvedRefNode($LIDENT.text);
+    var refNode = factory.createUnresolvedRef($LIDENT);
     if (attr == Attr.REF)
       $result = refNode;
     else
