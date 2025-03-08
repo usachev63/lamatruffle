@@ -341,11 +341,11 @@ const_ returns [LongLiteralNode result]
 varRef[Attr attr] returns [ExprNode result]
 :
   LIDENT {
-    ExprNode refNode = factory.createVarRef($LIDENT);
+    ExprNode refNode = factory.resolveRef($LIDENT);
     if (attr == Attr.REF)
       $result = refNode;
     else
-      $result = factory.createVarRead(refNode);
+      $result = factory.createRead(refNode);
   }
 ;
 

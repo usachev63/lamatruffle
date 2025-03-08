@@ -3,7 +3,7 @@ package ru.usachev63.lamatruffle.nodes;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import ru.usachev63.lamatruffle.nodes.expr.ExprNode;
 
-public final class LocalVarRefNode extends ExprNode {
+public final class LocalVarRefNode extends RefNode {
     private final int frameSlot;
 
     public LocalVarRefNode(int frameSlot) {

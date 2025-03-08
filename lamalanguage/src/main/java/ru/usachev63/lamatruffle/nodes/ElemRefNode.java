@@ -9,7 +9,7 @@ import ru.usachev63.lamatruffle.runtime.LamaString;
 
 @NodeChild(value = "container", type = ExprNode.class)
 @NodeChild(value = "index", type = ExprNode.class)
-public abstract class ElemRefNode extends ExprNode {
+public abstract class ElemRefNode extends RefNode {
     @Specialization
     protected LamaString.ElemDescriptor stringElem(LamaString container, long index) {
         return new LamaString.ElemDescriptor(container, index);

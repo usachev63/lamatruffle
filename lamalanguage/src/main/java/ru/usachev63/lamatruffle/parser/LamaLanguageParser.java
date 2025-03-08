@@ -1938,11 +1938,11 @@ public class LamaLanguageParser extends Parser {
 			setState(404);
 			((VarRefContext)_localctx).LIDENT = match(LIDENT);
 
-			    ExprNode refNode = factory.createVarRef(((VarRefContext)_localctx).LIDENT);
+			    ExprNode refNode = factory.resolveRef(((VarRefContext)_localctx).LIDENT);
 			    if (attr == Attr.REF)
 			      ((VarRefContext)_localctx).result =  refNode;
 			    else
-			      ((VarRefContext)_localctx).result =  factory.createVarRead(refNode);
+			      ((VarRefContext)_localctx).result =  factory.createRead(refNode);
 			  
 			}
 		}
