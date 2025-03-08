@@ -45,7 +45,7 @@ public class LamaNodeFactory {
         private final Scope topScope = new Scope(null);
         private Scope currentScope = topScope;
         private boolean isClosure = false;
-        private LocalVarRefNode closureContextLocal = null;
+        private ExprNode closureContextReadNode = null;
         private final List<ExprNode> closureBindings = new ArrayList<>();
         private int closureVarNum = 0;
 
@@ -77,13 +77,7 @@ public class LamaNodeFactory {
             if (isClosure)
                 return;
             isClosure = true;
-            closureContextLocal = createLocal("__closure_context", topScope);
-            prolog.add(
-                new LocalVarAssnNode(
-                    closureContextLocal,
-                    new ArgReadNode(parameterCount)
-                )
-            );
+            closureContextReadNode = new ArgReadNode(parameterCount);
         }
 
         private ElemRefNode createClosureVar(String name, ExprNode origin) {
@@ -92,7 +86,7 @@ public class LamaNodeFactory {
             int closureVarIndex = closureVarNum++;
             closureBindings.add(origin);
             var closureVarRef = ElemRefNodeGen.create(
-                new LocalVarReadNode(closureContextLocal),
+                closureContextReadNode,
                 new LongLiteralNode(closureVarIndex)
             );
             var nameAsTruffleStr = TruffleString.fromJavaStringUncached(name, TruffleString.Encoding.US_ASCII);

@@ -4,10 +4,7 @@ import com.oracle.truffle.api.dsl.NodeChild;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import ru.usachev63.lamatruffle.nodes.expr.ExprNode;
-import ru.usachev63.lamatruffle.runtime.LamaArray;
-import ru.usachev63.lamatruffle.runtime.LamaContext;
-import ru.usachev63.lamatruffle.runtime.LamaSexp;
-import ru.usachev63.lamatruffle.runtime.LamaString;
+import ru.usachev63.lamatruffle.runtime.*;
 
 @NodeChild(value = "refNode", type = RefNode.class)
 public abstract class GenericReadNode extends ExprNode {
@@ -43,5 +40,15 @@ public abstract class GenericReadNode extends ExprNode {
     @Specialization
     protected Object read(LamaSexp.ElemDescriptor descriptor) {
         return descriptor.sexp().elements[descriptor.index()];
+    }
+
+    @Specialization
+    protected Object read(VirtualFrame frame, FunctionRef ref) {
+        if (!ref.isClosure())
+            return FunctionObject.makeFunction(ref.rootNode);
+        Object[] closureVarInits = new Object[ref.closureVarInitNodes.length];
+        for (int i = 0; i < ref.closureVarInitNodes.length; ++i)
+            closureVarInits[i] = ref.closureVarInitNodes[i].executeGeneric(frame);
+        return FunctionObject.makeClosure(ref.rootNode, closureVarInits);
     }
 }
