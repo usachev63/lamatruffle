@@ -828,7 +828,7 @@ public class LamaLanguageParser extends Parser {
 				setState(176);
 				((MaybeAssignmentContext)_localctx).rhs = maybeAssignment(Attr.VAL);
 
-				    ((MaybeAssignmentContext)_localctx).result =  factory.createAssn(((MaybeAssignmentContext)_localctx).lhs.result, ((MaybeAssignmentContext)_localctx).rhs.result);
+				    ((MaybeAssignmentContext)_localctx).result =  GenericAssnNodeGen.create(((MaybeAssignmentContext)_localctx).lhs.result, ((MaybeAssignmentContext)_localctx).rhs.result);
 				  
 				}
 				break;
@@ -1938,11 +1938,11 @@ public class LamaLanguageParser extends Parser {
 			setState(404);
 			((VarRefContext)_localctx).LIDENT = match(LIDENT);
 
-			    ExprNode refNode = factory.resolveRef(((VarRefContext)_localctx).LIDENT);
+			    var refNode = new UnresolvedRefNode((((VarRefContext)_localctx).LIDENT!=null?((VarRefContext)_localctx).LIDENT.getText():null));
 			    if (attr == Attr.REF)
 			      ((VarRefContext)_localctx).result =  refNode;
 			    else
-			      ((VarRefContext)_localctx).result =  factory.createRead(refNode);
+			      ((VarRefContext)_localctx).result =  GenericReadNodeGen.create(refNode);
 			  
 			}
 		}

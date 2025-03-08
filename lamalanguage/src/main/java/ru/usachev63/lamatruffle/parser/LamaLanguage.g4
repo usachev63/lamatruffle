@@ -152,7 +152,7 @@ maybeAssignment[Attr attr] returns [ExprNode result]
 :
   {$attr != Attr.REF}?
   lhs=maybeCons[Attr.REF] ':=' rhs=maybeAssignment[Attr.VAL] {
-    $result = factory.createAssn($lhs.result, $rhs.result);
+    $result = GenericAssnNodeGen.create($lhs.result, $rhs.result);
   }
 |
   maybeCons[attr] { $result = $maybeCons.result; }
@@ -341,11 +341,11 @@ const_ returns [LongLiteralNode result]
 varRef[Attr attr] returns [ExprNode result]
 :
   LIDENT {
-    ExprNode refNode = factory.resolveRef($LIDENT);
+    var refNode = new UnresolvedRefNode($LIDENT.text);
     if (attr == Attr.REF)
       $result = refNode;
     else
-      $result = factory.createRead(refNode);
+      $result = GenericReadNodeGen.create(refNode);
   }
 ;
 

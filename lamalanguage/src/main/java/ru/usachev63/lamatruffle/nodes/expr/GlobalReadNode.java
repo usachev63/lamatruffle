@@ -17,7 +17,7 @@ public class GlobalReadNode extends ExprNode {
             .getGlobalScopeObject()
             .getVariable(name);
         if (value == null)
-            throw new RuntimeException("'" + name + "' ain't defined");
+            throw new RuntimeException("Global '" + name + "' ain't defined");
         return value;
     }
 }

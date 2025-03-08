@@ -20,7 +20,7 @@ public class GlobalAssnNode extends ExprNode {
             .getGlobalScopeObject()
             .updateVariable(name, value);
         if (!result)
-            throw new RuntimeException("'" + name + "' ain't defined");
+            throw new RuntimeException("Global '" + name + "' ain't defined");
         return value;
     }
 }
