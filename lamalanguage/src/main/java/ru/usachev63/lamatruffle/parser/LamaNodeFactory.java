@@ -68,7 +68,7 @@ public class LamaNodeFactory {
             resolver.addResolveFunctionSpawnRequest(node, lastFrame, frame);
             frame.currentScope.originalVariables.put(
                 lastFrame.functionName,
-                Ref.GlobalRef.createOriginal(frame, frame.functionName)
+                Ref.GlobalRef.createOriginal(frame, lastFrame.functionName)
             );
             frame.currentScope.prolog.add(new GlobalDefNode(lastFrame.functionName));
             frame.currentScope.prolog.add(

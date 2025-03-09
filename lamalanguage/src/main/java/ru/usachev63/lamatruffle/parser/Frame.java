@@ -97,22 +97,6 @@ public class Frame {
         return Ref.ClosureRef.createLowered(originRef, this, capturedVarIndex);
     }
 
-//        private Ref captureImpl(Ref parentRef, Frame parentFrame) {
-//            if (parentRef instanceof FunctionRef)
-//                return captureFunction((FunctionRef) parentRef, parentFrame);
-//            int closureVarIndex = capturedVarsNum++;
-//            return new ClosureRef(closureVarIndex);
-//        }
-
-//        private FunctionRef captureFunction(FunctionRef parentRef, Frame parentFrame) {
-//            if (!parentRef.isClosure())
-//                return new FunctionRef(parentRef.rootNode, null);
-//            var newCapturedRefs = new ArrayList<Ref>();
-//            for (Ref ref : parentRef.capturedRefs)
-//                newCapturedRefs.add(captureImpl(ref, parentFrame));
-//            return new FunctionRef(parentRef.rootNode, newCapturedRefs);
-//        }
-
     public void buildRootNode(ScopeExprNode body, LamaLanguage language) {
         Collections.reverse(prolog);
         for (var expr : prolog)
@@ -124,29 +108,6 @@ public class Frame {
             TruffleString.fromJavaStringUncached(functionName, TruffleString.Encoding.UTF_8),
             parameterCount
         );
+        this.rootNode.adoptChildren();
     }
-
-    public FunctionSpawnNode createFunctionSpawnNode() {
-//            if (!isClosure)
-        return FunctionSpawnNode.createFunction(rootNode);
-//            return FunctionSpawnNode.createClosure(rootNode, capturedRefNodes.toArray(new ExprNode[0]));
-    }
-
-//        private ExprNode buildNodeOfRef(Ref ref) {
-//            if (ref instanceof LocalVarRef localVarRef)
-//                return new LocalVarRefNode(localVarRef.frameSlot);
-//            if (ref instanceof ClosureRef closureRef) {
-//                return ElemRefNodeGen.create(
-//                    closureContextReadNode,
-//                    new LongLiteralNode(closureRef.capturedVarIndex)
-//                );
-//            }
-//            var functionRef = (FunctionRef) ref;
-//            if (!functionRef.isClosure())
-//                return FunctionSpawnNode.createFunction(functionRef.rootNode);
-//            var capturedRefNodes = new ExprNode[functionRef.capturedRefs.size()];
-//            for (int i = 0; i < functionRef.capturedRefs.size(); ++i)
-//                capturedRefNodes[i] = buildNodeOfRef(functionRef.capturedRefs.get(i));
-//            return FunctionSpawnNode.createClosure(functionRef.rootNode, capturedRefNodes);
-//        }
 }
