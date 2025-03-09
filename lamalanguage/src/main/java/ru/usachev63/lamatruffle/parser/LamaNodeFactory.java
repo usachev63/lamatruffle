@@ -1,5 +1,6 @@
 package ru.usachev63.lamatruffle.parser;
 
+import com.oracle.truffle.api.nodes.NodeUtil;
 import com.oracle.truffle.api.strings.TruffleString;
 import org.antlr.v4.runtime.Token;
 import ru.usachev63.lamatruffle.LamaLanguage;
@@ -23,6 +24,7 @@ public class LamaNodeFactory {
             TruffleString.fromJavaStringUncached("main", TruffleString.Encoding.UTF_8),
             0
         );
+        allRootNodes.add(this.main);
         frame = null;
     }
 
@@ -30,6 +32,14 @@ public class LamaNodeFactory {
     private final Resolver resolver = new Resolver();
     private LamaRootNode main;
     private Frame frame = new Frame("main", null, null);
+    private List<LamaRootNode> allRootNodes = new ArrayList<>();
+
+    public void dumpAll() {
+        for (LamaRootNode rootNode : allRootNodes) {
+            System.out.println("root node for " + rootNode.getName());
+            NodeUtil.printTree(System.out, rootNode);
+        }
+    }
 
     public LamaNodeFactory(LamaLanguage language) {
         this.language = language;
@@ -63,6 +73,7 @@ public class LamaNodeFactory {
     public void finishFuncDecl(ScopeExprNode body) {
         var lastFrame = popFrame();
         lastFrame.buildRootNode(body, language);
+        allRootNodes.add(lastFrame.rootNode);
         if (frame.isGlobalScope()) {
             var node = new UnresolvedFunctionSpawnNode();
             resolver.addResolveFunctionSpawnRequest(node, lastFrame, frame);
@@ -84,6 +95,7 @@ public class LamaNodeFactory {
     public ExprNode finishAnonFunction(ScopeExprNode body) {
         var lastFrame = popFrame();
         lastFrame.buildRootNode(body, language);
+        allRootNodes.add(lastFrame.rootNode);
         var node = new UnresolvedFunctionSpawnNode();
         resolver.addResolveFunctionSpawnRequest(node, lastFrame, frame);
         return node;

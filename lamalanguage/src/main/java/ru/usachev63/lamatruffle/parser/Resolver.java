@@ -6,6 +6,7 @@ import ru.usachev63.lamatruffle.nodes.expr.FunctionSpawnNode;
 import ru.usachev63.lamatruffle.nodes.expr.numeric.LongLiteralNode;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 public class Resolver {
@@ -19,17 +20,23 @@ public class Resolver {
     }
 
     public void resolveAll() {
+        var resolvedRefs = new ArrayList<NodeAndResolveRef>();
         for (var request : resolveNameRequests) {
             Ref originalRef = resolveName(request.node.lident, request.frame, request.scope);
             Ref refHere = resolveRef(originalRef, request.frame);
-            var newNode = makeNode(refHere);
-            request.node.replace(newNode);
+            resolvedRefs.add(new NodeAndResolveRef(request.node, refHere));
+        }
+        for (var pair : resolvedRefs) {
+            var newNode = makeNode(pair.resolvedRef);
+            pair.node.replace(newNode);
         }
         for (var request : resolveFunctionSpawnRequests) {
             var newNode = makeNodeForFunction(request.contextFrame, request.targetFrame);
             request.node.replace(newNode);
         }
     }
+
+    private record NodeAndResolveRef(UnresolvedRefNode node, Ref resolvedRef) {}
 
     private record ResolveNameRequest(UnresolvedRefNode node, Frame frame, Scope scope) {}
     private final List<ResolveNameRequest> resolveNameRequests = new ArrayList<>();
@@ -92,7 +99,7 @@ public class Resolver {
     }
 
     private ExprNode makeNodeForFunction(Frame contextFrame, Frame targetFrame) {
-        if (!contextFrame.isClosure)
+        if (!targetFrame.isClosure)
             return FunctionSpawnNode.createFunction(targetFrame.rootNode);
         ExprNode[] capturedVarNodes = new ExprNode[targetFrame.capturedVarsNum];
         for (var capturedByTarget : targetFrame.capturedRefs.keySet()) {

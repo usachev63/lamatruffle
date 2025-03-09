@@ -175,7 +175,8 @@ public class LamaLanguageParser extends Parser {
 	    parser.lama();
 		parser.factory.getMain().adoptChildren();
 	    parser.factory.resolveAll();
-		NodeUtil.printTree(System.out, parser.factory.getMain());
+//		NodeUtil.printTree(System.out, parser.factory.getMain());
+		parser.factory.dumpAll();
 	    return parser.factory.getMain().getCallTarget();
 	}
 

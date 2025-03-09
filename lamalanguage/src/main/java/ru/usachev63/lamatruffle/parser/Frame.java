@@ -2,6 +2,7 @@ package ru.usachev63.lamatruffle.parser;
 
 import com.oracle.truffle.api.frame.FrameDescriptor;
 import com.oracle.truffle.api.frame.FrameSlotKind;
+import com.oracle.truffle.api.nodes.NodeUtil;
 import com.oracle.truffle.api.strings.TruffleString;
 import ru.usachev63.lamatruffle.LamaLanguage;
 import ru.usachev63.lamatruffle.nodes.LamaRootNode;
