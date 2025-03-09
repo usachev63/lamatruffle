@@ -10,6 +10,8 @@ import ru.usachev63.lamatruffle.parser.LamaLanguageParser;
 import ru.usachev63.lamatruffle.runtime.FunctionObject;
 import ru.usachev63.lamatruffle.runtime.LamaContext;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.stream.IntStream;
 
 @TruffleLanguage.Registration(id = "lama", name = "lama")
@@ -26,6 +28,8 @@ public final class LamaLanguage extends TruffleLanguage<LamaContext> {
         Source source = request.getSource();
         return LamaLanguageParser.parseLama(this, source);
     }
+
+    public final List<String> builtinNames = new ArrayList<>();
 
     private void defineBuiltins(LamaContext context) {
         defineBuiltInFunction(
@@ -52,6 +56,7 @@ public final class LamaLanguage extends TruffleLanguage<LamaContext> {
 
     private void defineBuiltInFunction(LamaContext context, String name,
                                        NodeFactory<? extends LamaBuiltinBodyNode> nodeFactory) {
+        builtinNames.add(name);
         var argumentsNum = nodeFactory.getExecutionSignature().size();
         ArgReadNode[] functionArguments = IntStream.range(0, argumentsNum)
             .mapToObj(ArgReadNode::new)

@@ -8,29 +8,32 @@ import ru.usachev63.lamatruffle.nodes.LamaRootNode;
 import ru.usachev63.lamatruffle.nodes.LocalVarRefNode;
 import ru.usachev63.lamatruffle.nodes.expr.*;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 
 public class Frame {
     public final String functionName;
     public final Frame parent;
-    private final Scope parentScope;
+    public final Scope parentScope;
     public final FrameDescriptor.Builder frameDescriptorBuilder = FrameDescriptor.newBuilder();
     private int parameterCount = 0;
     private final List<ExprNode> prolog = new ArrayList<>();
-    private final Scope topScope = new Scope(null);
+    public final Scope topScope = new Scope(null);
     public Scope currentScope = topScope;
-    //        private boolean isClosure = false;
-//        private ExprNode closureContextReadNode = null;
-//        private int capturedVarsNum = 0;
-    //private final List<ExprNode> capturedRefNodes = new ArrayList<>();
-    private LamaRootNode rootNode = null;
+    public LamaRootNode rootNode = null;
+
+    public boolean isClosure = false;
+    public ExprNode closureContextReadNode = null;
+    public int capturedVarsNum = 0;
+    public final Map<Ref, Ref> capturedRefs = new HashMap<>(); // origin to here
+    public final Set<Ref> originalRefs = new HashSet<>();
+    public record ReferencePoint(Frame contextFrame, Scope contextScope) {}
+    public final Set<ReferencePoint> referencedIn = new HashSet<>();
 
     public Frame(String functionName, Frame parent, Scope parentScope) {
         this.functionName = functionName;
         this.parent = parent;
         this.parentScope = parentScope;
+        this.referencedIn.add(new ReferencePoint(this.parent, this.parentScope));
     }
 
     public boolean isGlobalFrame() {
@@ -50,6 +53,9 @@ public class Frame {
 
     public void addVariableDefinition(String name, ExprNode rhs /* maybe null*/) {
         if (isGlobalScope()) {
+            var ref = Ref.GlobalRef.createOriginal(this, name);
+            originalRefs.add(ref);
+            currentScope.originalVariables.put(name, ref);
             currentScope.prolog.add(new GlobalDefNode(name));
             if (rhs != null)
                 currentScope.prolog.add(new GlobalAssnNode(name, rhs));
@@ -64,10 +70,12 @@ public class Frame {
     }
 
     private LocalVarRefNode createLocal(String name, Scope scope) {
-        if (scope.variables.containsKey(name))
+        if (scope.originalVariables.containsKey(name))
             throw new RuntimeException(String.format("cannot redefine %s", name));
         int slot = frameDescriptorBuilder.addSlot(FrameSlotKind.Illegal, name, null);
-        scope.variables.put(name, new Ref.LocalVarRef(slot));
+        var ref = Ref.LocalVarRef.createOriginal(this, scope, slot);
+        originalRefs.add(ref);
+        scope.originalVariables.put(name, ref);
         return new LocalVarRefNode(slot);
     }
 
@@ -75,21 +83,19 @@ public class Frame {
         return createLocal(name, currentScope);
     }
 
-//        private void makeClosure() {
-//            if (isClosure)
-//                return;
-//            isClosure = true;
-//            closureContextReadNode = new ArgReadNode(parameterCount);
-//        }
+    private void makeClosure() {
+        if (isClosure)
+            return;
+        isClosure = true;
+        closureContextReadNode = new ArgReadNode(parameterCount);
+    }
 
-//        private Ref capture(String name, Ref parentRef, Frame parentFrame) {
-//            if (!isClosure)
-//                makeClosure();
-//            Ref capturedRef = captureImpl(parentRef, parentFrame);
-//            var nameAsTruffleStr = TruffleString.fromJavaStringUncached(name, TruffleString.Encoding.US_ASCII);
-//            topScope.variables.put(nameAsTruffleStr, capturedRef);
-//            return capturedRef;
-//        }
+    public Ref.ClosureRef capture(Ref originRef) {
+        if (!isClosure)
+            makeClosure();
+        int capturedVarIndex = capturedVarsNum++;
+        return Ref.ClosureRef.createLowered(originRef, this, capturedVarIndex);
+    }
 
 //        private Ref captureImpl(Ref parentRef, Frame parentFrame) {
 //            if (parentRef instanceof FunctionRef)

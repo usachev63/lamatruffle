@@ -51,7 +51,7 @@ public static RootCallTarget parseLama(LamaLanguage language, Source source) {
     parser.factory = new LamaNodeFactory(language);
     parser.lama();
 	parser.factory.getMain().adoptChildren();
-    parser.factory.resolveAllRefs();
+    parser.factory.resolveAll();
     return parser.factory.getMain().getCallTarget();
 }
 
