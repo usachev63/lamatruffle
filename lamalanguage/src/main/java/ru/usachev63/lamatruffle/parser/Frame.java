@@ -45,6 +45,12 @@ public class Frame {
         return isGlobalFrame() && currentScope.outer == null;
     }
 
+    public Ref getCapturedOrOriginal(Ref originalRef) {
+        if (originalRefs.contains(originalRef))
+            return originalRef;
+        return capturedRefs.get(originalRef);
+    }
+
     public void addParameter(String name) {
         int parameterIndex = parameterCount++;
         LocalVarRefNode localRefNode = createLocalHere(name);

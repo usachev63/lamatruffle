@@ -57,11 +57,9 @@ public class Resolver {
     private Ref resolveRef(Ref originalRef, Frame frame) {
         if (originalRef instanceof Ref.GlobalRef)
             return originalRef;
-        if (frame.originalRefs.contains(originalRef))
-            return originalRef;
-        var maybeResolved = frame.capturedRefs.get(originalRef);
-        if (maybeResolved != null)
-            return maybeResolved;
+        var maybeHere = frame.getCapturedOrOriginal(originalRef);
+        if (maybeHere != null)
+            return maybeHere;
         Ref parentRef = resolveRef(originalRef, frame.parent);
         Ref lowered = lower(parentRef, frame);
         frame.capturedRefs.put(originalRef, lowered);
@@ -102,12 +100,14 @@ public class Resolver {
         if (!targetFrame.isClosure)
             return FunctionSpawnNode.createFunction(targetFrame.rootNode);
         ExprNode[] capturedVarNodes = new ExprNode[targetFrame.capturedVarsNum];
-        for (var capturedByTarget : targetFrame.capturedRefs.keySet()) {
+        for (var entry : targetFrame.capturedRefs.entrySet()) {
+            var originalRef = entry.getKey();
+            var capturedByTarget = entry.getValue();
             if (capturedByTarget instanceof Ref.FunctionRef)
                 continue;
             assert capturedByTarget instanceof Ref.ClosureRef;
             var capturedVarIndex = ((Ref.ClosureRef) capturedByTarget).capturedVarIndex;
-            var capturedByThis = contextFrame.capturedRefs.get(capturedByTarget);
+            var capturedByThis = contextFrame.getCapturedOrOriginal(originalRef);
             assert capturedByThis != null;
             capturedVarNodes[capturedVarIndex] = makeNode(capturedByThis);
         }
