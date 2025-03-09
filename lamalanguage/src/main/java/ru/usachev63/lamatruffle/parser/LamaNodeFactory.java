@@ -76,6 +76,7 @@ public class LamaNodeFactory {
             );
         } else {
             var functionRef = Ref.FunctionRef.createOriginal(frame, frame.currentScope, lastFrame);
+            frame.originalRefs.add(functionRef);
             frame.currentScope.originalVariables.put(lastFrame.functionName, functionRef);
         }
     }

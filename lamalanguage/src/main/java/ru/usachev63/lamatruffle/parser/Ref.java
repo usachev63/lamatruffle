@@ -7,7 +7,7 @@ public abstract class Ref {
     public final Scope scope;
 
     protected Ref(Ref origin, Frame frame, Scope scope) {
-        this.origin = origin;
+        this.origin = origin != null ? origin : this;
         this.frame = frame;
         this.scope = scope;
     }
