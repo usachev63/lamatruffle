@@ -16,7 +16,6 @@ public class GlobalReadNode extends ExprNode {
         return impl();
     }
 
-    @CompilerDirectives.TruffleBoundary
     public Object impl() {
         var value = LamaContext
             .get(this)

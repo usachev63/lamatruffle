@@ -42,10 +42,10 @@ public class CallExprNode extends ExprNode {
 
     private FunctionObject spawn(VirtualFrame frame, FunctionRef ref) {
         if (!ref.isClosure())
-            return FunctionObject.makeFunction(ref.rootNode);
+            return FunctionObject.makeFunction(ref.callTarget, ref.parametersNum);
         Object[] closureVarInits = new Object[ref.closureVarInitNodes.length];
         for (int i = 0; i < ref.closureVarInitNodes.length; ++i)
             closureVarInits[i] = ref.closureVarInitNodes[i].executeGeneric(frame);
-        return FunctionObject.makeClosure(ref.rootNode, closureVarInits);
+        return FunctionObject.makeClosure(ref.callTarget, ref.parametersNum, closureVarInits);
     }
 }

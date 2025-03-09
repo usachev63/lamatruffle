@@ -13,11 +13,6 @@ public class GlobalDefNode extends ExprNode {
 
     @Override
     public Object executeGeneric(VirtualFrame frame) {
-        return impl();
-    }
-
-    @CompilerDirectives.TruffleBoundary
-    public int impl() {
         boolean result = LamaContext
             .get(this)
             .getGlobalScopeObject()

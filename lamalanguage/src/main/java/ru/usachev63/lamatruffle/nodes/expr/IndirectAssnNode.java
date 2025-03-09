@@ -21,7 +21,6 @@ public abstract class IndirectAssnNode extends ExprNode {
     }
 
     @Specialization
-    @CompilerDirectives.TruffleBoundary
     protected Object assign(String globalName, Object rhs) {
         boolean result = LamaContext
             .get(this)
@@ -33,19 +32,16 @@ public abstract class IndirectAssnNode extends ExprNode {
     }
 
     @Specialization
-    @CompilerDirectives.TruffleBoundary
     protected Object assign(LamaString.ElemDescriptor descriptor, long rhs) {
         descriptor.string().data[(int) descriptor.index()] = (char) rhs;
         return rhs;
     }
     @Specialization
-    @CompilerDirectives.TruffleBoundary
     protected Object assign(LamaArray.ElemDescriptor descriptor, Object rhs) {
         descriptor.array().elements[descriptor.index()] = rhs;
         return rhs;
     }
     @Specialization
-    @CompilerDirectives.TruffleBoundary
     protected Object assign(LamaSexp.ElemDescriptor descriptor, Object rhs) {
         descriptor.sexp().elements[descriptor.index()] = rhs;
         return rhs;

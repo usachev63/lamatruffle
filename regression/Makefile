@@ -10,7 +10,7 @@ check: $(TESTS) # ctest111
 
 $(TESTS): %: %.lama
 	@echo "regression/$@"
-	@cat $@.input | ../sl -J-Xss16m --disable-launcher-output $< > $@.log && diff $@.log orig/$@.log
+	@cat $@.input | ../standalone/target/slnative --disable-launcher-output $< > $@.log && diff $@.log orig/$@.log
 # 	@cat $@.input | LAMA=../runtime $(LAMAC) -i $< > $@.log && diff $@.log orig/$@.log
 # 	@cat $@.input | LAMA=../runtime $(LAMAC) -ds -s $< > $@.log && diff $@.log orig/$@.log
 # 	@LAMA=../runtime $(LAMAC) $< && cat $@.input | ./$@ > $@.log && diff $@.log orig/$@.log

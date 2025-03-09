@@ -11,17 +11,14 @@ import ru.usachev63.lamatruffle.runtime.LamaString;
 @NodeChild(value = "elemRefNode", type = ElemRefNode.class)
 public abstract class ElemReadNode extends ExprNode {
     @Specialization
-    @CompilerDirectives.TruffleBoundary
     protected long readStringElem(LamaString.ElemDescriptor descriptor) {
         return descriptor.string().data[(int)descriptor.index()];
     }
     @Specialization
-    @CompilerDirectives.TruffleBoundary
     protected Object readArrayElem(LamaArray.ElemDescriptor descriptor) {
         return descriptor.array().elements[descriptor.index()];
     }
     @Specialization
-    @CompilerDirectives.TruffleBoundary
     protected Object readSexpElem(LamaSexp.ElemDescriptor descriptor) {
         return descriptor.sexp().elements[descriptor.index()];
     }

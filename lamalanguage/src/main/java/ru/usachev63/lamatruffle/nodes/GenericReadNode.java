@@ -10,7 +10,6 @@ import ru.usachev63.lamatruffle.runtime.*;
 @NodeChild(value = "refNode", type = RefNode.class)
 public abstract class GenericReadNode extends ExprNode {
     @Specialization
-    @CompilerDirectives.TruffleBoundary
     protected Object read(String globalName) {
         var value = LamaContext
             .get(this)
@@ -30,19 +29,16 @@ public abstract class GenericReadNode extends ExprNode {
     }
 
     @Specialization
-    @CompilerDirectives.TruffleBoundary
     protected long read(LamaString.ElemDescriptor descriptor) {
         return descriptor.string().data[(int)descriptor.index()];
     }
 
     @Specialization
-    @CompilerDirectives.TruffleBoundary
     protected Object read(LamaArray.ElemDescriptor descriptor) {
         return descriptor.array().elements[descriptor.index()];
     }
 
     @Specialization
-    @CompilerDirectives.TruffleBoundary
     protected Object read(LamaSexp.ElemDescriptor descriptor) {
         return descriptor.sexp().elements[descriptor.index()];
     }
@@ -50,10 +46,10 @@ public abstract class GenericReadNode extends ExprNode {
     @Specialization
     protected Object read(VirtualFrame frame, FunctionRef ref) {
         if (!ref.isClosure())
-            return FunctionObject.makeFunction(ref.rootNode);
+            return FunctionObject.makeFunction(ref.callTarget, ref.parametersNum);
         Object[] closureVarInits = new Object[ref.closureVarInitNodes.length];
         for (int i = 0; i < ref.closureVarInitNodes.length; ++i)
             closureVarInits[i] = ref.closureVarInitNodes[i].executeGeneric(frame);
-        return FunctionObject.makeClosure(ref.rootNode, closureVarInits);
+        return FunctionObject.makeClosure(ref.callTarget, ref.parametersNum, closureVarInits);
     }
 }
