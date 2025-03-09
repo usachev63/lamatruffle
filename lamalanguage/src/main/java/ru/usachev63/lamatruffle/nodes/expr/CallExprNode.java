@@ -16,9 +16,9 @@ public class CallExprNode extends ExprNode {
     @Child
     private FunctionDispatchNode dispatchNode;
 
-    public CallExprNode(ExprNode calleeNode, List<ExprNode> arguments) {
+    public CallExprNode(ExprNode calleeNode, ExprNode[] arguments) {
         this.calleeNode = calleeNode;
-        this.argumentNodes = arguments.toArray(new ExprNode[0]);
+        this.argumentNodes = arguments;
         this.dispatchNode = FunctionDispatchNodeGen.create();
     }
 

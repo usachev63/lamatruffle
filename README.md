@@ -1,23 +1,34 @@
-# SimpleLanguage
+graal version: `23.0.2-graalce` (sdkman)
 
-A simple demonstration language built using Truffle for GraalVM.
+Build
+```sh
+antlr4 -Dlanguage=Java -package ru.usachev63.lamatruffle.parser -no-listener \
+  ./lamalanguage/src/main/java/ru/usachev63/lamatruffle/parser/LamaLanguage.g4 
+mvn package -Dmaven.test.skip -Pnative
+```
 
-SimpleLanguage is heavily documented to explain the how and why of writing a
-Truffle language. A good way to find out more is to read the source with
-comments. Start reading [here](https://github.com/graalvm/simplelanguage/blob/master/language/src/main/java/com/oracle/truffle/sl/SLLanguage.java).
-We also like to encourage people to clone the repository and start hacking.
+Lama native language launcher will be at `./standalone/target/slnative`
 
-This repository is licensed under the permissive UPL licence. Fork it to begin
-your own Truffle language.
+Regression tests:
+```sh
+cd regression
+make
+```
 
-For instructions on how to get started please refer to [our website](http://www.graalvm.org/docs/graalvm-as-a-platform/implement-language/)
+Performance test (lamac must be in path):
+```shell
+cd performance
+make
+```
 
-# Building for a JVM
+my results:
+```shell
+Sort
+lamac  Sort.lama && `which time` -f "Sort\t%U" ./Sort
+Sort    1.11
+`which time` -f "Sort\t%U" ../standalone/target/slnative Sort.lama
+== running on org.graalvm.polyglot.Engine@5b323836
+Sort    8.91
+```
 
-Build the project with `mvn package`.
-To run simple language using a JDK from JAVA_HOME run `./sl`.
-
-# Building a Native Image
-
-Build the project with `mvn package -Pnative`.
-To run simple language natively run `./standalone/target/slnative`.
+almost all time is spent in parsing stage (even before name resolving stage)

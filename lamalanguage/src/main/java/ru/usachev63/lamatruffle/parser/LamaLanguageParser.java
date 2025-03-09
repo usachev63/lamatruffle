@@ -1,4 +1,4 @@
-// Generated from /home/danila/SPbU/year4/VM/simplelanguage/lamalanguage/src/main/java/ru/usachev63/lamatruffle/parser/LamaLanguage.g4 by ANTLR 4.13.2
+// Generated from ./lamalanguage/src/main/java/ru/usachev63/lamatruffle/parser/LamaLanguage.g4 by ANTLR 4.13.2
 package ru.usachev63.lamatruffle.parser;
 
 // DO NOT MODIFY - generated from LamaLanguage.g4 using antlr4
@@ -7,7 +7,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import com.oracle.truffle.api.*;
-import com.oracle.truffle.api.nodes.NodeUtil;
 import com.oracle.truffle.api.source.*;
 import ru.usachev63.lamatruffle.*;
 import ru.usachev63.lamatruffle.nodes.*;
@@ -175,7 +174,6 @@ public class LamaLanguageParser extends Parser {
 	    parser.lama();
 		parser.factory.getMain().adoptChildren();
 	    parser.factory.resolveAll();
-//		parser.factory.dumpAll();
 	    return parser.factory.getMain().getCallTarget();
 	}
 

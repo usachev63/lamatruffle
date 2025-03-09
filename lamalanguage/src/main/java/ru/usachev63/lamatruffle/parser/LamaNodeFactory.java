@@ -132,7 +132,7 @@ public class LamaNodeFactory {
     /* parsing scope end */
 
     public CallExprNode createCallExpr(ExprNode calleeNode, List<ExprNode> argumentNodes) {
-        return new CallExprNode(calleeNode, argumentNodes);
+        return new CallExprNode(calleeNode, argumentNodes.toArray(new ExprNode[0]));
     }
 
     public StringLiteralNode createStringLiteral(Token literalToken) {

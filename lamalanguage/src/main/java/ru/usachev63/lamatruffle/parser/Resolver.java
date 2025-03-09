@@ -26,6 +26,10 @@ public class Resolver {
             Ref refHere = resolveRef(originalRef, request.frame);
             resolvedRefs.add(new NodeAndResolveRef(request.node, refHere));
         }
+        while (!resolveWorkList.isEmpty()) {
+            var item = resolveWorkList.removeLast();
+            resolveRef(item.originalRef, item.frame);
+        }
         for (var pair : resolvedRefs) {
             var newNode = makeNode(pair.resolvedRef);
             pair.node.replace(newNode);
@@ -54,6 +58,13 @@ public class Resolver {
         return resolveName(name, frame.parent, frame.parentScope);
     }
 
+    private record ResolveWorkListItem(Ref originalRef, Frame frame) {}
+    private List<ResolveWorkListItem> resolveWorkList = new ArrayList<>();
+
+    private void addToResolveWorkList(Ref originalRef, Frame frame) {
+        resolveWorkList.add(new ResolveWorkListItem(originalRef, frame));
+    }
+
     private Ref resolveRef(Ref originalRef, Frame frame) {
         if (originalRef instanceof Ref.GlobalRef)
             return originalRef;
@@ -64,7 +75,7 @@ public class Resolver {
         Ref lowered = lower(parentRef, frame);
         frame.capturedRefs.put(originalRef, lowered);
         for (var referencePoint : frame.referencedIn)
-            resolveRef(originalRef, referencePoint.contextFrame());
+            addToResolveWorkList(originalRef, referencePoint.contextFrame());
         return lowered;
     }
 
@@ -77,7 +88,7 @@ public class Resolver {
     private Ref lower(Ref.FunctionRef parentRef, Frame frame) {
         var loweredRef = Ref.FunctionRef.createLowered(frame, parentRef);
         for (var origin : parentRef.targetFrame.capturedRefs.keySet())
-            resolveRef(origin, frame);
+            addToResolveWorkList(origin, frame);
         return loweredRef;
     }
 
