@@ -1,7 +1,5 @@
 package ru.usachev63.lamatruffle.parser;
 
-import com.oracle.truffle.api.frame.FrameDescriptor;
-import com.oracle.truffle.api.frame.FrameSlotKind;
 import com.oracle.truffle.api.strings.TruffleString;
 import org.antlr.v4.runtime.Token;
 import ru.usachev63.lamatruffle.LamaLanguage;
@@ -33,108 +31,9 @@ public class LamaNodeFactory {
     }
 
     private final LamaLanguage language;
+    private final Resolver resolver = new Resolver();
     private LamaRootNode main;
-
-    private static class Frame {
-        private final String functionName;
-        private final Frame parent;
-        private final Scope parentScope;
-        private final FrameDescriptor.Builder frameDescriptorBuilder = FrameDescriptor.newBuilder();
-        private int parameterCount = 0;
-        private final List<ExprNode> prolog = new ArrayList<>();
-        private final Scope topScope = new Scope(null);
-        private Scope currentScope = topScope;
-        private boolean isClosure = false;
-        private ExprNode closureContextReadNode = null;
-        private int closureVarNum = 0;
-        private final FunctionRefNode thisRefNode = new FunctionRefNode();
-
-        private Frame(String functionName, Frame parent, Scope parentScope) {
-            this.functionName = functionName;
-            this.parent = parent;
-            this.parentScope = parentScope;
-        }
-
-        private boolean isGlobal() {
-            return parent == null;
-        }
-
-        private LocalVarRefNode createLocal(String name, Scope scope) {
-            var nameTruffleStr = TruffleString.fromJavaStringUncached(name, TruffleString.Encoding.US_ASCII);
-            if (scope.variables.containsKey(nameTruffleStr))
-                throw new RuntimeException(String.format("cannot redefine %s", name));
-            int slot = frameDescriptorBuilder.addSlot(FrameSlotKind.Illegal, name, null);
-            var refNode = new LocalVarRefNode(slot);
-            scope.variables.put(nameTruffleStr, refNode);
-            return refNode;
-        }
-
-        private LocalVarRefNode createLocalHere(String name) {
-            return createLocal(name, currentScope);
-        }
-
-        private void makeClosure() {
-            if (isClosure)
-                return;
-            isClosure = true;
-            closureContextReadNode = new ArgReadNode(parameterCount);
-        }
-
-        private ElemRefNode createClosureVar(String name, ExprNode origin) {
-            if (!isClosure)
-                makeClosure();
-            int closureVarIndex = closureVarNum++;
-            this.thisRefNode.closureVarInitNodes.add(origin);
-            var closureVarRef = ElemRefNodeGen.create(
-                closureContextReadNode,
-                new LongLiteralNode(closureVarIndex)
-            );
-            var nameAsTruffleStr = TruffleString.fromJavaStringUncached(name, TruffleString.Encoding.US_ASCII);
-            topScope.variables.put(nameAsTruffleStr, closureVarRef);
-            return closureVarRef;
-        }
-
-        private void buildRootNode(ScopeExprNode body, LamaLanguage language) {
-            Collections.reverse(prolog);
-            for (var expr : prolog)
-                body.setBody(new SeqNode(expr, body.getBody()));
-            thisRefNode.rootNode = new LamaRootNode(
-                language,
-                frameDescriptorBuilder.build(),
-                body,
-                TruffleString.fromJavaStringUncached(functionName, TruffleString.Encoding.UTF_8),
-                parameterCount
-            );
-            thisRefNode.rootNode.adoptChildren();
-        }
-    }
-
-    static class Scope {
-        private final Scope outer;
-        private final List<ExprNode> prolog = new ArrayList<>();
-        private final Map<TruffleString, RefNode> variables = new HashMap<>();
-
-        private Scope(Scope outer) {
-            this.outer = outer;
-        }
-
-        private RefNode find(TruffleString name) {
-            var result = variables.get(name);
-            if (result != null)
-                return result;
-            if (outer != null)
-                return outer.find(name);
-            return null;
-        }
-    }
-
-    private record UnresolvedRef(UnresolvedRefNode node, Frame frame, Scope scope) {}
-    private final List<UnresolvedRef> unresolvedRefs = new ArrayList<>();
     private Frame frame = new Frame("main", null, null);
-
-    public boolean isGlobalScope() {
-        return frame.isGlobal() && frame.currentScope.outer == null;
-    }
 
     public void startFrame(Token lident) {
         frame = new Frame(lident.getText(), frame, frame.currentScope);
@@ -153,30 +52,30 @@ public class LamaNodeFactory {
     }
 
     public void addFormalParameter(Token lident) {
-        int parameterIndex = frame.parameterCount++;
-        LocalVarRefNode localRefNode = frame.createLocalHere(lident.getText());
-        ExprNode assn = createAssn(localRefNode, new ArgReadNode(parameterIndex));
-        frame.prolog.add(assn);
+        frame.addParameter(lident.getText());
     }
 
     public void finishFuncDecl(ScopeExprNode body) {
         var lastFrame = popFrame();
         lastFrame.buildRootNode(body, language);
-        var nameAsTruffleStr = TruffleString.fromJavaStringUncached(lastFrame.functionName, TruffleString.Encoding.US_ASCII);
-        var functionRefNode = lastFrame.thisRefNode;
-        if (isGlobalScope()) {
+        if (frame.isGlobalScope()) {
             frame.currentScope.prolog.add(new GlobalDefNode(lastFrame.functionName));
-            frame.currentScope.prolog.add(new GlobalAssnNode(lastFrame.functionName, FunctionSpawnNodeGen.create(functionRefNode)));
+            frame.currentScope.prolog.add(
+                new GlobalAssnNode(
+                    lastFrame.functionName,
+                    lastFrame.createFunctionSpawnNode()
+                )
+            );
         } else {
-            frame.currentScope.variables.put(nameAsTruffleStr, functionRefNode);
+            var nameAsTruffleStr = TruffleString.fromJavaStringUncached(lastFrame.functionName, TruffleString.Encoding.US_ASCII);
+//            frame.currentScope.variables.put(nameAsTruffleStr, new FunctionRef(lastFrameG));
         }
     }
 
     public ExprNode finishAnonFunction(ScopeExprNode body) {
         var lastFrame = popFrame();
         lastFrame.buildRootNode(body, language);
-        FunctionRefNode refNode = lastFrame.thisRefNode;
-        return FunctionSpawnNodeGen.create(refNode);
+        return lastFrame.createFunctionSpawnNode();
     }
 
     /* parsing scope begin */
@@ -187,18 +86,7 @@ public class LamaNodeFactory {
 
     public void onVariableDefinition(Token lident, ExprNode rhs /*maybe null*/) {
         String name = lident.getText();
-        if (isGlobalScope()) {
-            frame.currentScope.prolog.add(new GlobalDefNode(name));
-            if (rhs != null)
-                frame.currentScope.prolog.add(new GlobalAssnNode(name, rhs));
-        } else {
-            LocalVarRefNode localRefNode = frame.createLocalHere(lident.getText());
-            if (rhs != null) {
-                frame.currentScope.prolog.add(
-                    new LocalVarAssnNode(localRefNode, rhs)
-                );
-            }
-        }
+        frame.addVariableDefinition(name, rhs);
     }
 
     public ScopeExprNode finishScope(ExprNode body, boolean popScope) {
@@ -263,34 +151,12 @@ public class LamaNodeFactory {
 
     public UnresolvedRefNode createUnresolvedRef(Token lident) {
         var node = new UnresolvedRefNode(lident.getText());
-        unresolvedRefs.add(new UnresolvedRef(node, frame, frame.currentScope));
+        resolver.addResolveRequest(node, frame, frame.currentScope);
         return node;
     }
 
     public ElemRefNode createElemRef(ExprNode base, ExprNode index) {
         return ElemRefNodeGen.create(base, index);
-    }
-
-    public ExprNode createAssn(ExprNode lhs, ExprNode rhs) {
-        if (lhs instanceof GlobalRefNode globalRefNode)
-            return new GlobalAssnNode(globalRefNode.getName(), rhs);
-        if (lhs instanceof LocalVarRefNode localVarRefNode)
-            return new LocalVarAssnNode(localVarRefNode, rhs);
-        if (lhs instanceof ElemRefNode elemRefNode)
-            return ElemAssnNodeGen.create(elemRefNode, rhs);
-        return IndirectAssnNodeGen.create(lhs, rhs);
-    }
-
-    public ExprNode createRead(ExprNode refNode) {
-        if (refNode instanceof GlobalRefNode globalRefNode)
-            return new GlobalReadNode(globalRefNode.getName());
-        if (refNode instanceof LocalVarRefNode localVarRefNode)
-            return new LocalVarReadNode(localVarRefNode);
-        if (refNode instanceof ElemRefNode elemRefNode)
-            return ElemReadNodeGen.create(elemRefNode);
-        if (refNode instanceof FunctionRefNode functionRefNode)
-            return refNode;
-        throw new IllegalStateException("wrong refNode in createRead");
     }
 
     public ElemReadNode createElemRead(ExprNode container, ExprNode index) {
@@ -387,43 +253,51 @@ public class LamaNodeFactory {
         return new StringLiteralPatternNode(stringLiteralValueOf(literalToken.getText()));
     }
 
+//    private record UnresolvedRef(UnresolvedRefNode node, Frame frame, Scope scope) {}
+//    private final List<UnresolvedRef> unresolvedRefs = new ArrayList<>();
+
     public void resolveAllRefs() {
-        for (UnresolvedRef unresolvedRef : unresolvedRefs) {
-            RefNode resolvedRefNode = resolveRef(unresolvedRef);
-            unresolvedRef.node.replace(resolvedRefNode);
-        }
+        resolver.resolveAll();
     }
 
-    private RefNode resolveRef(UnresolvedRef unresolvedRef) {
-        String varName = unresolvedRef.node.lident;
-        var varNameTruffleStr = TruffleString.fromJavaStringUncached(varName, TruffleString.Encoding.US_ASCII);
-        RefNode origin = null;
-        var frameStack = new ArrayList<Frame>();
-        Frame originFrame = unresolvedRef.frame;
-        Scope originScope = unresolvedRef.scope;
-        while (originFrame != null) {
-            frameStack.add(originFrame);
-            RefNode ref = originScope.find(varNameTruffleStr);
-            if (ref != null) {
-                origin = ref;
-                break;
-            }
-            originScope = originFrame.parentScope;
-            originFrame = originFrame.parent;
-        }
-        if (originFrame == null)
-            return new GlobalRefNode(varName);
-        if (originFrame == unresolvedRef.frame)
-            return origin;
-        Collections.reverse(frameStack);
-        RefNode current = origin;
-        for (int i = 0; i < frameStack.size() - 1; ++i) {
-            var currentFrame = frameStack.get(i + 1);
-            current = currentFrame.createClosureVar(
-                varName,
-                createRead(current)
-            );
-        }
-        return current;
-    }
+//    public void resolveAllRefs() {
+//        for (UnresolvedRef unresolvedRef : unresolvedRefs) {
+//            Ref resolvedRef = resolveRef(unresolvedRef.node.lident, unresolvedRef.frame, unresolvedRef.scope);
+//            unresolvedRef.node.replace(unresolvedRef.frame.buildNodeOfRef(resolvedRef));
+//        }
+//    }
+
+//    private static Ref resolveRef(String name, Frame frame, Scope scope) {
+//        var varNameTruffleStr = TruffleString.fromJavaStringUncached(name, TruffleString.Encoding.US_ASCII);
+//        Ref origin = null;
+//        var frameStack = new ArrayList<Frame>();
+//        Frame originFrame = frame;
+//        Scope originScope = scope;
+//        while (originFrame != null) {
+//            frameStack.add(originFrame);
+//            Ref ref = originScope.find(varNameTruffleStr);
+//            if (ref != null) {
+//                origin = ref;
+//                break;
+//            }
+//            originScope = originFrame.parentScope;
+//            originFrame = originFrame.parent;
+//        }
+//        if (originFrame == null)
+//            return new GlobalRef(name);
+//        if (originFrame == frame)
+//            return origin;
+//        Collections.reverse(frameStack);
+//        Ref current = origin;
+//        for (int i = 0; i < frameStack.size() - 1; ++i) {
+//            var parentFrame = frameStack.get(i);
+//            var currentFrame = frameStack.get(i + 1);
+//            current = currentFrame.capture(
+//                name,
+//                current,
+//                parentFrame
+//            );
+//        }
+//        return current;
+//    }
 }

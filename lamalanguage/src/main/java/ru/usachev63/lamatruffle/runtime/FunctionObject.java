@@ -14,16 +14,8 @@ public final class FunctionObject implements TruffleObject {
 
     public boolean isClosure() { return closureContext != null; }
 
-    public static FunctionObject makeFunction(LamaRootNode rootNode) {
-        return new FunctionObject(rootNode.getCallTarget(), rootNode.parametersNum, null);
-    }
-
     public static FunctionObject makeFunction(CallTarget callTarget, int parametersNum) {
         return new FunctionObject(callTarget, parametersNum, null);
-    }
-
-    public static FunctionObject makeClosure(LamaRootNode rootNode, Object[] initialClosureVariables) {
-        return new FunctionObject(rootNode.getCallTarget(), rootNode.parametersNum, new LamaArray(initialClosureVariables));
     }
 
     public static FunctionObject makeClosure(CallTarget callTarget, int parametersNum, Object[] initialClosureVariables) {

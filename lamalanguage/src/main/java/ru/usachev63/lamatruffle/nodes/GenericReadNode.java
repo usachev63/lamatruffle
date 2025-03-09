@@ -7,7 +7,7 @@ import com.oracle.truffle.api.frame.VirtualFrame;
 import ru.usachev63.lamatruffle.nodes.expr.ExprNode;
 import ru.usachev63.lamatruffle.runtime.*;
 
-@NodeChild(value = "refNode", type = RefNode.class)
+@NodeChild(value = "refNode", type = ExprNode.class)
 public abstract class GenericReadNode extends ExprNode {
     @Specialization
     protected Object read(String globalName) {
@@ -44,12 +44,7 @@ public abstract class GenericReadNode extends ExprNode {
     }
 
     @Specialization
-    protected Object read(VirtualFrame frame, FunctionRef ref) {
-        if (!ref.isClosure())
-            return FunctionObject.makeFunction(ref.callTarget, ref.parametersNum);
-        Object[] closureVarInits = new Object[ref.closureVarInitNodes.length];
-        for (int i = 0; i < ref.closureVarInitNodes.length; ++i)
-            closureVarInits[i] = ref.closureVarInitNodes[i].executeGeneric(frame);
-        return FunctionObject.makeClosure(ref.callTarget, ref.parametersNum, closureVarInits);
+  protected Object read(FunctionObject function) {
+        return function;
     }
 }
