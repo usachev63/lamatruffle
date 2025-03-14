@@ -44,7 +44,7 @@ DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
 
 PROGRAM_ARGS=()
-JAVA_ARGS=()
+JAVA_ARGS=("-Xss256m")
 if [ -d "$JAVA_HOME/lib/graalvm" ]; then
 
     for opt in "$@"
